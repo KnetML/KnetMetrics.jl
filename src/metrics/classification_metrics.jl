@@ -249,10 +249,10 @@ end
 function correctly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing)
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
-        x = c.true_positives + c.true_negatives
+        x = c.true_positives + c.false_positives
         return clear_output(x,c.zero_division)
     else
-        x = c.true_positives[index] + c.true_negatives[index]
+        x = c.true_positives[index] + c.false_positives[index]
         return clear_output(x,c.zero_division)
     end
 end
