@@ -81,7 +81,7 @@ function confusion_matrix(expected::Array{T,1}, predicted::Array{T,1}; labels = 
         fill!(matrix, sample_weight)
     end
     @inbounds for i in 1:length(expected)
-       matrix[dictionary[predicted[i]],dictionary[expected[i]]] += 1
+       matrix[dictionary[expected[i]],dictionary[predicted[i]]] += 1
     end
     tp, tn, fp, fn = init_confusion_params(matrix)
     if 0 in tp
@@ -162,9 +162,6 @@ function classification_report(c::confusion_matrix; io::IO = Base.stdout, return
     println(io,lpad("Fowlkes Mallows Index:", 30), [lpad(round(i, digits = digits), label_len) for i in fowlkes_mallows_index(c)]...)
     println(io,lpad("Informedness:", 30), [lpad(round(i, digits = digits), label_len) for i in informedness(c)]...)
     println(io,lpad("Markedness:", 30), [lpad(round(i, digits = digits), label_len) for i in markedness(c)]...)
-    println(io,lpad("Cohen Kappa Score (overall):", 30), [lpad(round(i, digits = digits), label_len) for i in cohen_kappa_score(c)]...)
-    println(io,lpad("Hamming Loss:", 30), [lpad(round(i, digits = digits), label_len) for i in hamming_loss(c)]...)
-    println(io,lpad("Jaccard Score:", 30), [lpad(round(i, digits = digits), label_len) for i in jaccard_score(c)]...)
     if return_dict
         result_dict = Dict()
         result_dict["true-positives"] = c.true_positives
@@ -195,9 +192,6 @@ function classification_report(c::confusion_matrix; io::IO = Base.stdout, return
         result_dict["fowlkes-mallows-index"] = fowlkes_mallows_index(c)
         result_dict["informedness"] = informedness(c)
         result_dict["markedness"] = markedness(c)
-        result_dict["cohen-kappa-score"] = cohen_kappa_score(c)
-        result_dict["hamming-loss"] = hamming_loss(c)
-        result_dict["jaccard-score"] = jaccard_score(c)
         return result_dict
     end
 end
@@ -249,10 +243,10 @@ end
 function correctly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing)
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
-        x = c.true_positives + c.false_positives
+        x = c.true_positives + c.true_negatives
         return clear_output(x,c.zero_division)
     else
-        x = c.true_positives[index] + c.false_positives[index]
+        x = c.true_positives[index] + c.true_negatives[index]
         return clear_output(x,c.zero_division)
     end
 end
@@ -309,20 +303,25 @@ function positive_predictive_value(c::confusion_matrix; ith_class = nothing, cla
    return precision(c, class_name = class_name, ith_class = ith_class)
 end
 
-function accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, normalize = false, sample_weight = nothing)
+function accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, normalize = true, sample_weight = nothing)
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
-        accuracy_array = [accuracy_score(c, ith_class = i) for i in length(c.true_positives)]
+        accuracy_array = [accuracy_score(c, ith_class = i) for i in 1:length(c.true_positives)]
         if normalize
-            x = sample_weight == nothing ? sum(accuracy_array) / length(c.true_positives) : sum(accuracy_array .* sample_weight) / length(c.true_positives)
+            x = sample_weight == nothing ? (sum(accuracy_array) / sum(c.matrix)) : (sum(accuracy_array .* sample_weight) / sum(c.matrix))
             return clear_output(x,c.zero_division)
         else
             x = sample_weight == nothing ? sum(accuracy_array) : dot(accuracy_array, sample_weight)
             return clear_output(x,c.zero_division)
         end
     else
-        x = (c.true_positives[index] + c.true_negatives[index] ) / (condition_positive(c, ith_class = index) + condition_negative(c, ith_class = index))
-        return clear_output(x, c.zero_division)
+        if normalize
+            x = (c.true_positives[index] + c.true_negatives[index] ) / (condition_positive(c, ith_class = index) + condition_negative(c, ith_class = index))
+            return clear_output(x, c.zero_division)
+        else
+            x = (c.true_positives[index])
+            return clear_output(x, c.zero_division)
+        end
     end
 end
 
@@ -508,7 +507,7 @@ end
 
 function jaccard_score(c::confusion_matrix; average = "binary", sample_weight = nothing)
     @assert average in [nothing, "binary", "weighted", "samples", "micro"] "Unknown averaging type"
-    if sample_weight != nothing; @assert length(sample_weight) == length(c.true_positives) "Dimensions of given sample weight does not match the confusion matrix"; end
+    @assert length(sample_weight) == length(c.true_positives) "Dimensions of given sample weight does not match the confusion matrix"
     numerator = c.true_positives
     denominator =  c.false_positives + c.false_negatives + c.true_negatives
     if average == nothing
@@ -531,7 +530,7 @@ function jaccard_score(c::confusion_matrix; average = "binary", sample_weight = 
         x / length(c.Labels)
         return clear_output(x, c.zero_division)
     else
-        x = [(c.false_negatives[i] + c.true_positives[i])/length(c.Labels) for i in 1:length(c.Labels)]
+        x = [(false_negatives[i] + true_positives[i])/length(c.Labels) for i in 1:length(c.Labels)]
         return clear_output(x, c.zero_division)
     end
 end
