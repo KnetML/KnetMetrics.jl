@@ -542,6 +542,9 @@ function condition_positive(c::confusion_matrix; ith_class = nothing, class_name
     end
 end
 
+condition_positive(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+condition_positive(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 ```condition_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
 
@@ -616,6 +619,10 @@ function condition_negative(c::confusion_matrix; ith_class = nothing, class_name
     end
 end
 
+condition_negative(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+condition_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
+
 """
 ```predicted_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
 
@@ -688,6 +695,9 @@ function predicted_positive(c::confusion_matrix; ith_class = nothing, class_name
         return clear_output(x,c.zero_division)
     end
 end
+
+predicted_positive(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+predicted_positive(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 ```predicted_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -762,6 +772,9 @@ function predicted_negative(c::confusion_matrix; ith_class = nothing, class_name
     end
 end
 
+predicted_negative(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+predicted_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 ```correctly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
 
@@ -834,6 +847,9 @@ function correctly_classified(c::confusion_matrix; ith_class = nothing, class_na
         return clear_output(x,c.zero_division)
     end
 end
+
+correctly_classified(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+correctly_classified(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 ```incorrectly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -909,6 +925,9 @@ function incorrectly_classified(c::confusion_matrix; ith_class = nothing, class_
     end
 end
 
+incorrectly_classified(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+incorrectly_classified(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 ```sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
 
@@ -966,6 +985,9 @@ function sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name 
     end
 end
 
+sensitivity_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+sensitivity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 ```recall_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
 
@@ -1017,6 +1039,8 @@ function recall_score(c::confusion_matrix; ith_class = nothing, class_name = not
     return sensitivity_score(c, ith_class = ith_class, class_name = class_name)
 end
 
+recall_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+recall_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 ```specificity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -1074,6 +1098,8 @@ function specificity_score(c::confusion_matrix; ith_class = nothing, class_name 
     end
 end
 
+specificity_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+specificity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 ```precision_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -1134,6 +1160,9 @@ function precision_score(c::confusion_matrix; ith_class = nothing, class_name = 
     end
 end
 
+precision_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+precision_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 ```positive_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
 
@@ -1185,6 +1214,9 @@ _See also_ : ```negative_predictive_value```, ```confusion_matrix```, ```sensiti
 function positive_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing)
    return precision_score(c, class_name = class_name, ith_class = ith_class)
 end
+
+positive_predictive_value(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+positive_predictive_value(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 ```accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, normalize = true, sample_weight = nothing) ```
@@ -1251,6 +1283,9 @@ function accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = n
     end
 end
 
+accuracy_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, normalize = true, sample_weight = nothing) where T <: Union{Int, String}  =
+accuracy_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, normalize = true, sample_weight = nothing)
+
 """
 ```balanced_accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing) ```
 
@@ -1313,6 +1348,9 @@ function balanced_accuracy_score(c::confusion_matrix; ith_class = nothing, class
     end
 end
 
+balanced_accuracy_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+balanced_accuracy_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 
 ```negative_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing) ```
@@ -1363,6 +1401,9 @@ function negative_predictive_value(c::confusion_matrix; ith_class = nothing, cla
         return clear_output(x,c.zero_division)
     end
 end
+
+negative_predictive_value(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+negative_predictive_value(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 
@@ -1417,6 +1458,9 @@ function false_negative_rate(c::confusion_matrix; ith_class = nothing, class_nam
     end
 end
 
+false_negative_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+false_negative_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 
 ```false_positive_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing) ```
@@ -1466,6 +1510,9 @@ function false_positive_rate(c::confusion_matrix; ith_class = nothing, class_nam
         return clear_output(x,c.zero_division)
     end
 end
+
+false_positive_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+false_positive_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 
@@ -1518,6 +1565,9 @@ function false_discovery_rate(c::confusion_matrix; ith_class = nothing, class_na
     end
 end
 
+false_discovery_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+false_discovery_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 ```false_omission_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing) ```
 
@@ -1566,6 +1616,9 @@ function false_omission_rate(c::confusion_matrix; ith_class = nothing, class_nam
         return clear_output(x,c.zero_division)
     end
 end
+
+false_omission_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+false_omission_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 ```f1_score(c::confusion_matrix; ith_class = nothing, class_name = nothing) ```
@@ -1616,6 +1669,9 @@ function f1_score(c::confusion_matrix; ith_class = nothing, class_name = nothing
         return clear_output(x,c.zero_division)
     end
 end
+
+f1_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+f1_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 
@@ -1674,6 +1730,9 @@ function prevalence_threshold(c::confusion_matrix; ith_class = nothing, class_na
     end
 end
 
+prevalence_threshold(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+prevalence_threshold(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 
 ```threat_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -1724,6 +1783,9 @@ function threat_score(c::confusion_matrix; ith_class = nothing, class_name = not
         return clear_output(x,c.zero_division)
     end
 end
+
+threat_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+threat_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 
@@ -1782,6 +1844,9 @@ function matthews_correlation_coeff(c::confusion_matrix; ith_class = nothing, cl
     end
 end
 
+matthews_correlation_coeff(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+matthews_correlation_coeff(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 
 ```fowlkes_mallows_index(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -1837,6 +1902,9 @@ function fowlkes_mallows_index(c::confusion_matrix; ith_class = nothing, class_n
     end
 end
 
+fowlkes_mallows_index(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+fowlkes_mallows_index(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 
 ```informedness(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -1889,6 +1957,9 @@ function informedness(c::confusion_matrix; ith_class = nothing, class_name = not
         return clear_output(x,c.zero_division)
     end
 end
+
+informedness(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+informedness(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
 
 """
 
@@ -1944,6 +2015,9 @@ function markedness(c::confusion_matrix; ith_class = nothing, class_name = nothi
     end
 end
 
+markedness(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
+markedness(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+
 """
 ```cohen_kappa_score(c::confusion_matrix; weights = nothing) ```
 
@@ -1990,6 +2064,9 @@ function cohen_kappa_score(c::confusion_matrix; weights = nothing)
     return clear_output(1- x,c.zero_division)
 end
 
+cohen_kappa_score(expected::Array{T,1}, predicted::Array{T,1}; weights = nothing) where T <: Union{Int, String}  =
+cohen_kappa_score(confusion_matrix(expected,predicted), weights = nothing)
+
 """
 
 ```hamming_loss(c::confusion_matrix) ```
@@ -2018,6 +2095,9 @@ function hamming_loss(c::confusion_matrix;)
     x[1] = sum(c.false_negatives)
     return clear_output(mean(x), c.zero_division)
 end
+
+hamming_loss(expected::Array{T,1}, predicted::Array{T,1};) where T <: Union{Int, String}  =
+hamming_loss(confusion_matrix(expected,predicted))
 
 """
 
@@ -2107,3 +2187,6 @@ function jaccard_score(c::confusion_matrix; average = "binary", sample_weight = 
         return clear_output(x, c.zero_division)
     end
 end
+
+jaccard_score(expected::Array{T,1}, predicted::Array{T,1}; average = "binary", sample_weight = nothing) where T <: Union{Int, String}  =
+jaccard_score(confusion_matrix(expected,predicted), average = average, sample_weight = sample_weight)
