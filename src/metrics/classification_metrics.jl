@@ -40,9 +40,9 @@ function check_index(x, none_accepted; class_name = nothing, ith_class = nothing
 end
 
 function clear_output(x, zero_division)
-    if true in [isnan(i) || isinf(i) for i in x]
+    if true in [isnan(i) for i in x]
         if zero_division == "warn" || zero_division == "0"
-            if zero_division == "warn"; @warn "Zero division, replacing NaN or Inf with 0"; end;
+            if zero_division == "warn"; @warn "Zero division, replacing NaN with 0"; end;
             if length(x) > 1
                 return replace(x, NaN => 0)
             else
@@ -476,7 +476,7 @@ function classification_report(c::confusion_matrix; io::IO = Base.stdout, return
 end
 
 classification_report(expected, predicted; io::IO = Base.stdout, return_dict = false, target_names = nothing, digits = 2) =
-classification_report(confusion_matrix(expected, predicted); io::IO = Base.stdout, return_dict = false, target_names = nothing, digits = 2)
+classification_report(confusion_matrix(expected, predicted); io = Base.stdout, return_dict = false, target_names = nothing, digits = 2)
 
 """
 ```condition_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -532,19 +532,21 @@ julia> condition_positive(x, class_name = "knet")
 _See also_ : `confusion_matrix`, `condition_negative`, `predicted_positive`, `predicted_negative`
 
 """
-function condition_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function condition_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = c.true_positives + c.false_negatives
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.true_positives[index] + c.false_negatives[index]
         return clear_output(x,c.zero_division)
     end
 end
 
-condition_positive(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-condition_positive(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+condition_positive(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+condition_positive(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```condition_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -609,19 +611,21 @@ julia> condition_negative(x, class_name = 3)
 _See also_ : `confusion_matrix`, `condition_positive`, `predicted_positive`, `predicted_negative`
 
 """
-function condition_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function condition_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = c.true_negatives + c.false_positives
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.true_negatives[index] + c.false_positives[index]
         return clear_output(x,c.zero_division)
     end
 end
 
-condition_negative(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-condition_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+condition_negative(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+condition_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 
 """
@@ -686,19 +690,21 @@ julia> predicted_positive(x, class_name = 3)
 _See also_ : `confusion_matrix`, `condition_negative`, `predicted_positive`, `predicted_negative`
 
 """
-function predicted_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function predicted_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = c.true_positives + c.false_positives
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.true_positives[index] + c.false_positives[index]
         return clear_output(x,c.zero_division)
     end
 end
 
-predicted_positive(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-predicted_positive(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+predicted_positive(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+predicted_positive(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```predicted_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -762,19 +768,21 @@ julia> predicted_negative(x, class_name = 4)
 _See also_ : `confusion_matrix`, `condition_negative`, `predicted_positive`, `condition_positive`
 
 """
-function predicted_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function predicted_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = c.true_negatives + c.false_negatives
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.true_negatives[index] + c.false_negatives[index]
         return clear_output(x,c.zero_division)
     end
 end
 
-predicted_negative(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-predicted_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+predicted_negative(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+predicted_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```correctly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -838,19 +846,21 @@ julia> correctly_classified(x, ith_class = 1)
 _See also_ : `confusion_matrix`, `predicted_negative`, `predicted_positive`, `incorrectly_classified`
 
 """
-function correctly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function correctly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = c.true_positives + c.true_negatives
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.true_positives[index] + c.true_negatives[index]
         return clear_output(x,c.zero_division)
     end
 end
 
-correctly_classified(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-correctly_classified(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+correctly_classified(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+correctly_classified(confusion_matrix(expected,predicted); ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```incorrectly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -915,19 +925,21 @@ julia> incorrectly_classified(x, ith_class = 2)
 _See also_ : `confusion_matrix`, `predicted_negative`, `predicted_positive`, `correctly_classified`
 
 """
-function incorrectly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function incorrectly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = c.false_positives + c.false_negatives
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.false_positives[index] + c.false_negatives[index]
         return clear_output(x,c.zero_division)
     end
 end
 
-incorrectly_classified(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-incorrectly_classified(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+incorrectly_classified(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+incorrectly_classified(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -975,19 +987,21 @@ julia> sensitivity_score(x, class_name = 1)
 
 _See also_ : `confusion_matrix` , `recall_score` ,  `balanced_accuracy_score`, `specificity_score`
 """
-function sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = c.true_positives ./ condition_positive(c)
-        return clear_output(x, c.zero_division)
+        x = clear_output(x, c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.true_positives[index] / condition_positive(c, ith_class = index)
         return clear_output(x, c.zero_division)
     end
 end
 
-sensitivity_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-sensitivity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+sensitivity_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+sensitivity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```recall_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -1036,12 +1050,12 @@ julia> recall_score(x, class_name = 1)
 _See also_ : `confusion_matrix` , `sensitivity_score` ,  `balanced_accuracy_score`, `specificity_score`
 
 """
-function recall_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)
-    return sensitivity_score(c, ith_class = ith_class, class_name = class_name)
+function recall_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    return sensitivity_score(c, ith_class = ith_class, class_name = class_name, average = average)
 end
 
-recall_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-recall_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+recall_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+recall_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```specificity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -1088,19 +1102,21 @@ julia> specificity(x,ith_class = 2)
 _See also_ : ```confusion_matrix```, ```sensitivity_score```, ```balanced_accuracy_score```,```recall_score```
 
 """
-function specificity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function specificity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = c.true_negatives ./ condition_negative(c)
-        return clear_output(x, c.zero_division)
+        x = clear_output(x, c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.true_negatives[index] / condition_negative(c, ith_class = index)
         return clear_output(x, c.zero_division)
     end
 end
 
-specificity_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-specificity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+specificity_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+specificity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```precision_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -1150,19 +1166,21 @@ julia>  precision_score(x, class_name = 3)
 _See also_ : ```confusion_matrix```, ```sensitivity_score```, ```balanced_accuracy_score```,```recall_score```
 
 """
-function precision_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function precision_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = c.true_positives ./ (c.true_positives + c.false_positives)
-        return clear_output(x, c.zero_division)
+        x = clear_output(x, c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.true_positives[index] / (c.true_positives[index] + c.false_positives[index])
         return clear_output(x,c.zero_division)
     end
 end
 
-precision_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-precision_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+precision_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+precision_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```positive_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -1212,12 +1230,12 @@ julia> positive_predictive_value(x, ith_class = 3)
 _See also_ : ```negative_predictive_value```, ```confusion_matrix```, ```sensitivity_score```, ```balanced_accuracy_score```,```recall_score```
 
 """
-function positive_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing)
-   return precision_score(c, class_name = class_name, ith_class = ith_class)
+function positive_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+   return precision_score(c, class_name = class_name, ith_class = ith_class, average = average)
 end
 
-positive_predictive_value(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-positive_predictive_value(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+positive_predictive_value(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+positive_predictive_value(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, normalize = true, sample_weight = nothing) ```
@@ -1338,19 +1356,21 @@ _See also_ : ```accuracy_score``` ```confusion_matrix```, ```hamming_loss```, ``
        [link](https://mitpress.mit.edu/books/fundamentals-machine-learning-predictive-data-analytics)
 
 """
-function balanced_accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function balanced_accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [(sensitivity_score(c, ith_class = i) +  specificity_score(c, ith_class = i)) / 2 for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = (sensitivity_score(c,ith_class = index) +  specificity_score(c, ith_class = index)) / 2
         return clear_output(x,c.zero_division)
     end
 end
 
-balanced_accuracy_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-balanced_accuracy_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+balanced_accuracy_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+balanced_accuracy_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 
@@ -1392,19 +1412,21 @@ julia> negative_predictive_value(x)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```positive_predictive_value```, ```balanced_accuracy_score```
 
 """
-function negative_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function negative_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    return average == "binary" ? x : mean(x)
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [c.true_negatives[i] / (c.true_negatives[i] + c.false_negatives[i]) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.true_negatives[index] / (c.true_negatives[index] + c.false_negatives[index])
         return clear_output(x,c.zero_division)
     end
 end
 
-negative_predictive_value(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-negative_predictive_value(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+negative_predictive_value(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+negative_predictive_value(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 
@@ -1448,19 +1470,21 @@ julia> false_negative_rate(x)
  _See Also_ :   ```confusion_matrix```, ```false_positive_rate```, ```positive_predictive_value```, ```balanced_accuracy_score```
 
 """
-function false_negative_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function false_negative_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [c.false_negatives[i] / condition_positive(c,ith_class = i) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.false_negatives[index] / condition_positive(c,ith_class = index)
         return clear_output(x,c.zero_division)
     end
 end
 
-false_negative_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-false_negative_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+false_negative_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+false_negative_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 
@@ -1501,19 +1525,21 @@ julia> false_positive_rate(x)
 
  _See Also_ :   ```confusion_matrix```, ```false_negative_rate```, ```positive_predictive_value```, ```balanced_accuracy_score```
 """
-function false_positive_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function false_positive_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [c.false_positives[i] / condition_negative(c,ith_class = i) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.false_positives[index] / condition_negative(c,ith_class = index)
         return clear_output(x,c.zero_division)
     end
 end
 
-false_positive_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-false_positive_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+false_positive_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+false_positive_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 
@@ -1555,19 +1581,21 @@ julia> false_discovery_rate(x, ith_class = 3)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```positive_predictive_value```, ```false_omission_rate```
 
 """
-function false_discovery_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function false_discovery_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average= "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [c.false_positives[i] / ( c.false_positives[i]  + c.true_negatives[i]) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.false_positives[index] / ( c.false_positives[index]  + c.true_negatives[index])
         return clear_output(x,c.zero_division)
     end
 end
 
-false_discovery_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-false_discovery_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+false_discovery_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+false_discovery_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```false_omission_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing) ```
@@ -1607,19 +1635,21 @@ julia> false_omission_rate(x, ith_class = 5)
 
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```positive_predictive_value```, ```false_discovery_rate```
 """
-function false_omission_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function false_omission_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [1 - negative_predictive_value(c,ith_class = i) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = 1 - negative_predictive_value(c,ith_class = index)
         return clear_output(x,c.zero_division)
     end
 end
 
-false_omission_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-false_omission_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+false_omission_rate(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+false_omission_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```f1_score(c::confusion_matrix; ith_class = nothing, class_name = nothing) ```
@@ -1660,19 +1690,21 @@ julia> f1_score(x, class_name = 2)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```recall_score```, ```false_omission_rate```
 
 """
-function f1_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function f1_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [(2* c.true_positives[i] ) / (2* c.true_positives[i] + c.false_positives[i] + c.false_negatives[i]) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = (2* c.true_positives[index] ) / (2* c.true_positives[index] + c.false_positives[index] + c.false_negatives[index])
         return clear_output(x,c.zero_division)
     end
 end
 
-f1_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-f1_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+f1_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+f1_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 
@@ -1720,19 +1752,21 @@ julia> prevalence_threshold(x, ith_class = 1)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```recall_score```, ```f1_score```
 
 """
-function prevalence_threshold(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function prevalence_threshold(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [(sqrt(abs(sensitivity_score(c,ith_class = i) * (-specificity_score(c,ith_class = i) +1) + specificity_score(c,ith_class = i) -1)) / (sensitivity_score(c,ith_class = i) + specificity_score(c,ith_class = i) -1)) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = (sqrt(abs(sensitivity_score(c,ith_class = index) * (-specificity_score(c,ith_class = index) +1) + specificity_score(c,ith_class = index) -1)) / (sensitivity_score(c,ith_class = index) + specificity_score(c,ith_class = index) -1))
         return clear_output(x,c.zero_division)
     end
 end
 
-prevalence_threshold(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-prevalence_threshold(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+prevalence_threshold(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+prevalence_threshold(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 
@@ -1774,19 +1808,21 @@ julia> threat_score(x, ith_class = 3)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```recall_score```, ```f1_score```
 
 """
-function threat_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function threat_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [c.true_positives[i] / (c.true_positives[i] + c.false_negatives[i] + c.false_positives[i]) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = c.true_positives[index] / (c.true_positives[index] + c.false_negatives[index] + c.false_positives[index])
         return clear_output(x,c.zero_division)
     end
 end
 
-threat_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-threat_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+threat_score(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+threat_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 
@@ -1831,13 +1867,15 @@ julia> matthews_correlation_coeff(x, ith_class = 3)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```threat_score```, ```f1_score```
 
 """
-function matthews_correlation_coeff(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function matthews_correlation_coeff(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "bianry")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [(c.true_positives[i] * c.true_negatives[i] - c.false_positives[i] * c.false_negatives[i]) / sqrt( abs((c.true_positives[i] + c.false_positives[i]) * (c.true_positives[i] + c.false_negatives[i]) *
             (c.true_negatives[i] + c.false_positives[i]) * (c.true_negatives[i] + c.false_negatives[i])))
          for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x =  clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = (c.true_positives[index] * c.true_negatives[index] - c.false_positives[index] * c.false_negatives[index]) / sqrt( (c.true_positives[index] + c.false_positives[index]) * (c.true_positives[index] + c.false_negatives[index]) *
             (c.true_negatives[index] + c.false_positives[index]) * (c.true_negatives[index] + c.false_negatives[index]))
@@ -1845,8 +1883,8 @@ function matthews_correlation_coeff(c::confusion_matrix; ith_class = nothing, cl
     end
 end
 
-matthews_correlation_coeff(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-matthews_correlation_coeff(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+matthews_correlation_coeff(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+matthews_correlation_coeff(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 
@@ -1892,19 +1930,21 @@ julia> fowlkes_mallows_index(x, ith_class = 2)
 
 _See Also_ :   ```confusion_matrix```, ```matthews_correlation_coeff```, ```threat_score```, ```f1_score```
 """
-function fowlkes_mallows_index(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function fowlkes_mallows_index(c::confusion_matrix; ith_class = nothing, class_name = nothing, average ="binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [sqrt(positive_predictive_value(c,ith_class = i) * sensitivity_score(c,ith_class = i)) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = sqrt(positive_predictive_value(c,ith_class = index) * sensitivity_score(c,ith_class = index))
         return clear_output(x,c.zero_division)
     end
 end
 
-fowlkes_mallows_index(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-fowlkes_mallows_index(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+fowlkes_mallows_index(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+fowlkes_mallows_index(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 
@@ -1948,19 +1988,21 @@ julia> informedness(x,ith_class = 3)
 
 _See Also_ :   ```confusion_matrix```, ```matthews_correlation_coeff```, ```markedness```, ```f1_score```
 """
-function informedness(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function informedness(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [ ( specificity_score(c,ith_class = i) + sensitivity_score(c,ith_class = i) -1) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x = specificity_score(c,ith_class = index) + sensitivity_score(c,ith_class = index) -1
         return clear_output(x,c.zero_division)
     end
 end
 
-informedness(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-informedness(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+informedness(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+informedness(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 
@@ -2005,19 +2047,21 @@ julia> markedness(x, ith_class = 1)
 _See Also_ :   ```confusion_matrix```, ```matthews_correlation_coeff```, ```informedness```, ```f1_score```
 
 """
-function markedness(c::confusion_matrix; ith_class = nothing, class_name = nothing)
+function markedness(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
+    @assert average in ["binary", "macro"] "Unknown averaging type"
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
         x = [( precision_score(c,ith_class = i) * negative_predictive_value(c,ith_class = i) -1) for i in 1:length(c.true_positives)]
-        return clear_output(x,c.zero_division)
+        x = clear_output(x,c.zero_division)
+        return average == "binary" ? x : mean(x)
     else
         x =  specificity_score(c,ith_class = index) + sensitivity_score(c,ith_class = index) -1
         return clear_output(x,c.zero_division)
     end
 end
 
-markedness(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing) where T <: Union{Int, String}  =
-markedness(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name)
+markedness(expected::Array{T,1}, predicted::Array{T,1}; ith_class = nothing, class_name = nothing, average = "binary") where T <: Union{Int, String}  =
+markedness(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
 
 """
 ```cohen_kappa_score(c::confusion_matrix; weights = nothing) ```
