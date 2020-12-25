@@ -172,8 +172,6 @@ ____________________________________________________________
            convention for axes)
 
 _See: confusion params function_ \n
-_Source:_ [script](https://github.com/emirhan422/KnetMetrics/blob/main/src/metrics/classification_metrics.jl)
-
 """
 function confusion_matrix(expected::Array{T,1}, predicted::Array{T,1}; labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn") where T <: Union{Int, String}
     @assert length(expected) == length(predicted) "Sizes of the expected and predicted values do not match"
@@ -476,6 +474,9 @@ function classification_report(c::confusion_matrix; io::IO = Base.stdout, return
         println(io, lpad("Jaccard Score:\t", 30), jaccard_score(c, average = "micro"))
     end
 end
+
+classification_report(expected, predicted; io::IO = Base.stdout, return_dict = false, target_names = nothing, digits = 2) =
+classification_report(confusion_matrix(expected, predicted); io::IO = Base.stdout, return_dict = false, target_names = nothing, digits = 2)
 
 """
 ```condition_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
