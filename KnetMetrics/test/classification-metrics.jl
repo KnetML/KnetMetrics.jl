@@ -1,7 +1,7 @@
 using Test
-using Knet.Metrics
+using KnetMetrics
 
-@testset "metrics" begin
+@testset "classification-metrics" begin
     random_true = rand(2:6,1000)
     random_pred = rand(2:6,1000)
     random_labels = [2,3,4,5,6]
