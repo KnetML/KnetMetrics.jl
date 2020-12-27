@@ -1,7 +1,7 @@
-module ClassificationMetrics
+module Classification
 
 import Plots
-import Statistics: mean
+import Statistics
 
 include("confusion_matrix.jl"); export confusion_params, confusion_matrix, class_confusion
 include("metrics.jl"); export visualize
