@@ -95,9 +95,11 @@ or a single string.\n
 function visualize(c::confusion_matrix; mode = "matrix", seriestype::String = "heatmap", title= nothing, labels = nothing)
     @assert seriestype in ["scatter", "heatmap", "line", "histogram", "bar"] "Unknown visualization format"
     labels = labels != nothing ? labels : convert(Array{typeof(c.Labels[1])}, c.Labels)
-    if title == nothing || length(title) != length(mode); title = mode; end
+    if title == nothing; title = mode isa Array ? mode : String(Base.copymutable(mode)); end
+    title = title isa Array ? title : [title]
+    mode = mode isa Array ? mode : [mode]
     plt = []
-    @inbounds for i in 1:length(mode)
+    for i in 1:length(mode)
         @assert mode[i] in ["matrix", "condition-positive", "condition-negative", "predicted-positive","predicted-negative", "correctly-classified", "incorrectly-classified", "sensitivity-score", "recall-score", "specificity-score", "precision-score", "positive-predictive-value", "accuracy-score", "balanced-accuracy-score", "negative-predictive-value", "false-negative-rate", "false-positive-rate", "false-discovery-rate",
          "false-omission-rate", "f1-score", "prevalence-threshold", "threat-score", "matthews-correlation-coeff", "fowlkes-mallows-index",
          "informedness", "markedness", "cohen-kappa-score", "hamming-loss", "jaccard-score"] "Unknown visualization mode"
