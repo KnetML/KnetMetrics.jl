@@ -1,4 +1,6 @@
-using Documenter, KnetMetrics
+using Pkg, KnetMetrics;
+Pkg.add("Documenter")
+using Documenter
 
 makedocs(
     modules = [KnetMetrics],
