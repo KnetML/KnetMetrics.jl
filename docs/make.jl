@@ -10,11 +10,10 @@ makedocs(
     pages = Any[
         "Home" => "index.md",
         "Manual" => Any[
-            "install.md",
             "tutorial.md",
 #           "examples.md",
             "reference.md"
         ]])
 
-        
+
 deploydocs("https://github.com/emirhan422/KnetMetrics.jl.git")
