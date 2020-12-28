@@ -7,13 +7,13 @@ makedocs(
     format = Documenter.HTML(),
     sitename = "KnetMetrics.jl",
     authors = "Emirhan Kurtuluş.",
-    pages = Any[ 
+    pages = Any[ # Compat: `Any` for 0.4 compat
         "Home" => "index.md",
         "Manual" => Any[
             "install.md",
             "tutorial.md",
 #           "examples.md",
-            "reference.md",
+            "reference.md"
         ])
 
 
