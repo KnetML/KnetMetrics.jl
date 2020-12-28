@@ -7,14 +7,13 @@ makedocs(
     format = Documenter.HTML(),
     sitename = "KnetMetrics.jl",
     authors = "Emirhan Kurtuluş.",
-    pages = Any[ 
+    pages = Any[
         "Home" => "index.md",
         "Manual" => Any[
-            "install.md",
             "tutorial.md",
 #           "examples.md",
-            "reference.md",
-        ])
+            "reference.md"
+        ]])
 
 
-deploydocs("https://github.com/emirhan422/KnetMetrics.jl.git")
+deploydocs(repo = "https://github.com/emirhan422/KnetMetrics.jl.git")
