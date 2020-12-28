@@ -16,4 +16,4 @@ makedocs(
         ]])
 
 
-deploydocs("https://github.com/emirhan422/KnetMetrics.jl.git")
+deploydocs(repo = "https://github.com/emirhan422/KnetMetrics.jl.git")
