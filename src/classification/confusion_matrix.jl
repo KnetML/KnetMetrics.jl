@@ -174,27 +174,27 @@ ____________________________________________________________
 
 _See: confusion params function_ \n
 """
-function confusion_matrix(expected::Array{T,1}, predicted::Array{T,1}; labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn") where T <: Union{Int, String}
+function confusion_matrix(expected, predicted; labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn")
+    expected = expected isa Array ? expected : Array(expected)
+    predicted = predicted isa Array ? predicted : Array(predicted)
     @assert length(expected) == length(predicted) "Sizes of the expected and predicted values do not match"
     @assert eltype(expected) <: Union{Int, String} &&  eltype(predicted) <: Union{Int, String} "Expected and Predicted arrays must either be integers or strings"
     @assert eltype(expected) == eltype(predicted) "Element types of Expected and Predicted arrays do not match"
+
     if labels != nothing; @assert length(labels) != 0 "Labels array must contain at least one value"; end;
     @assert zero_division in ["warn", "0", "1"] "Unknown zero division behaviour specification"
     if labels == nothing
-        @warn "No labels provided, constructing a label set by union of the unique elements in Expected and Predicted arrays"
+        @info "No labels provided, constructing a label set by union of the unique elements in Expected and Predicted arrays"
         labels = union(unique(expected),unique(predicted))
         if eltype(labels) == Int
             sort!(labels)
         end
     end
-    dictionary = Dict()
-    for i in 1:length(labels)
+    dictionary = Dict{eltype(labels),Int}()
+    for i in 1:length(labels)  #faster than passing a generator or array of pairs into dict?
         dictionary[labels[i]] = i
     end
-    matrix = zeros(Number, length(labels), length(labels))
-    if sample_weight != 0
-        fill!(matrix, sample_weight)
-    end
+    matrix = Array{Number}(fill(sample_weight::Number, (length(labels), length(labels))))
     @inbounds for i in 1:length(expected)
        matrix[dictionary[expected[i]],dictionary[predicted[i]]] += 1
     end
@@ -216,6 +216,9 @@ function confusion_matrix(expected::Array{T,1}, predicted::Array{T,1}; labels = 
     end
     return confusion_matrix(tp,tn,fp,fn,matrix,labels, zero_division)
 end
+
+confusion_params(c::confusion_matrix) = c.true_positives, c.true_negatives, c.false_positives, c.false_negatives
+
 
 """
 ```class_confusion(c::confusion_matrix; class_name = nothing, ith_class = nothing)```
