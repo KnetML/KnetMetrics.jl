@@ -1084,11 +1084,11 @@ function accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = n
 
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
-        numerator = (x.true_positives)
-        denominator = (x.true_positives .+ x.false_positives)
+        numerator = (c.true_positives)
+        denominator = (c.true_positives .+ c.false_positives)
     else
-        numerator = (x.true_positives[index])
-        denominator = (x.true_positives[index] .+ x.false_positives[index])
+        numerator = (c.true_positives[index])
+        denominator = (c.true_positives[index] .+ c.false_positives[index])
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
     return _average_helper(numerator, denominator, weights, average, c.zero_division; normalize = normalize)
