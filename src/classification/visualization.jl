@@ -1,9 +1,7 @@
 #Visualization Functions
 export visualize
 
-using Plots
-
-gr()
+using GR
 
 function _plot(c::confusion_matrix; func, type, title, labels = nothing)
     x = nothing

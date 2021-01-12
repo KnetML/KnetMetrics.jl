@@ -26,40 +26,6 @@ function confusion_params(matrix::Array{Number,2})
     return tp, tn, fp, fn
 end
 
-function check_index(x, none_accepted; class_name = nothing, ith_class = nothing)
-    if !none_accepted; @assert class_name != nothing || ith_class != nothing "No class name or class indexing value provided"; end
-    if none_accepted && class_name == nothing == ith_class
-        return -1
-    elseif class_name != nothing
-        @assert class_name in x "There is no such class in the labels of the given confusion matrix"
-        index = findfirst(x -> x == class_name, x)
-        return index
-    else
-        @assert ith_class >= 0 && ith_class <= length(x) "ith_class value is not in range"
-        return ith_class
-    end
-end
-
-function clear_output(x, zero_division)
-    if true in [isnan(i) for i in x]
-        if zero_division == "warn" || zero_division == "0"
-            if zero_division == "warn"; @warn "Zero division, replacing NaN with 0"; end;
-            if length(x) > 1
-                return replace(x, NaN => 0)
-            else
-                return 0
-            end
-        else
-            if length(x) > 1
-                return replace(x, NaN => 1)
-            else
-                return 1
-            end
-        end
-    else return x
-    end
-end
-
 """
 A struct for representing confusion matrix and related computations
 
