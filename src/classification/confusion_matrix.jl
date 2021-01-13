@@ -140,7 +140,7 @@ ____________________________________________________________
 
 _See: confusion params function_ \n
 """
-function confusion_matrix(expected, predicted; labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn")
+function confusion_matrix(expected, predicted; labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn", type = Number)
     expected = expected isa Array ? expected : Array(expected)
     predicted = predicted isa Array ? predicted : Array(predicted)
     @assert length(expected) == length(predicted) "Sizes of the expected and predicted values do not match"
@@ -160,7 +160,8 @@ function confusion_matrix(expected, predicted; labels = nothing, normalize = fal
     for i in 1:length(labels)  #faster than passing a generator or array of pairs into dict?
         dictionary[labels[i]] = i
     end
-    matrix = Array{Number}(fill(sample_weight::Number, (length(labels), length(labels))))
+    matrix = Array{type, 2}(undef, length(labels), length(labels))
+    fill!(matrix, type(sample_weight))
     @inbounds for i in 1:length(expected)
        matrix[dictionary[expected[i]],dictionary[predicted[i]]] += 1
     end

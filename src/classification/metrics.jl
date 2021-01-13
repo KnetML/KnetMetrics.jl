@@ -36,7 +36,7 @@ function clear_output(x, zero_division)
     end
 end
 
-function _average_helper(numerator, denominator, weights, average, zero_division; normalize = false)
+function _average_helper(numerator, denominator, weights, average, zero_division, normalize)
     if average == "macro"
         x = clear_output(denominator == nothing ? mean(numerator) : mean(numerator ./ denominator), zero_division)
     elseif average == "micro"
@@ -46,6 +46,7 @@ function _average_helper(numerator, denominator, weights, average, zero_division
     else
         x = clear_output(denominator == nothing ? numerator : numerator ./ denominator, zero_division)
     end
+    return normalize && length(x) > 1 ? LinearAlgebra.normalize(x) : x
 end
 
 """
@@ -163,40 +164,40 @@ General Statistics
                Jaccard Score:   0.2631578947368421
 ```
 """
-function classification_report(c::confusion_matrix; io::IO = Base.stdout, return_dict = false, target_names = nothing, digits = 2)
+function classification_report(c::confusion_matrix; io::IO = Base.stdout, return_dict = false, target_names = nothing, digits = 2, normalize = false)
     if return_dict
         result_dict = Dict()
         result_dict["true-positives"] = c.true_positives
         result_dict["false-positives"] = c.false_positives
         result_dict["true-negatives"] = c.true_negatives
         result_dict["false-negatives"] = c.false_negatives
-        result_dict["condition-positive"] = condition_positive(c, average = "binary")
-        result_dict["condition-negative"] = condition_negative(c, average = "binary")
-        result_dict["predicted-positive"] = predicted_positive(c, average = "binary")
-        result_dict["predicted-negative"] = predicted_negative(c, average = "binary")
-        result_dict["correctly-classified"] = correctly_classified(c, average = "binary")
-        result_dict["incorrectly-classified"] = incorrectly_classified(c, average = "binary")
-        result_dict["sensitivity"] = sensitivity_score(c, average = "binary")
-        result_dict["specificity"] = specificity_score(c, average = "binary")
-        result_dict["precision"] = precision_score(c, average = "binary")
-        result_dict["accuracy-score"] = accuracy_score(c, average = "binary")
-        result_dict["balanced Accuracy"] = balanced_accuracy(c, average = "binary")
-        result_dict["positive-predictive-value"] =  positive_predictive_value(c, average = "binary")
-        result_dict["negative-predictive-value"] = negative_predictive_value(c, average = "binary")
-        result_dict["false-negative-rate"]  = false_negative_rate(c, average = "binary")
-        result_dict["false-positive-rate"]  = false_positive_rate(c, average = "binary")
-        result_dict["false-discovery-rate"] = false_discovery_rate(c, average = "binary")
-        result_dict["f1-score"] = f1_score(c, average = "binary")
-        result_dict["false-omission-rate"]  = false_omission_rate(c , average = "binary")
-        result_dict["prevalence-threshold"] = prevalence_threshold(c, average = "binary")
-        result_dict["threat-score"] = threat_score(c, average = "binary")
-        result_dict["matthews-correlation-coefficient"] = matthews_correlation_coeff(c, average = "binary")
-        result_dict["fowlkes-mallows-index"] = fowlkes_mallows_index(c, average = "binary")
-        result_dict["informedness"] = informedness(c, average = "binary")
-        result_dict["markedness"] = markedness(c, average = "binary")
-        result_dict["jaccard-score-macroaverage"] = jaccard_score(c, average = "macro")
-        result_dict["jaccard-score-microaverage"] = jaccard_score(c, average = "micro")
-        result_dict["hamming-loss"] = jaccard_score(c)
+        result_dict["condition-positive"] = condition_positive(c, average = "binary", normalize = normalize)
+        result_dict["condition-negative"] = condition_negative(c, average = "binary", normalize = normalize)
+        result_dict["predicted-positive"] = predicted_positive(c, average = "binary", normalize = normalize)
+        result_dict["predicted-negative"] = predicted_negative(c, average = "binary", normalize = normalize)
+        result_dict["correctly-classified"] = correctly_classified(c, average = "binary", normalize = normalize)
+        result_dict["incorrectly-classified"] = incorrectly_classified(c, average = "binary", normalize = normalize)
+        result_dict["sensitivity"] = sensitivity_score(c, average = "binary", normalize = normalize)
+        result_dict["specificity"] = specificity_score(c, average = "binary", normalize = normalize)
+        result_dict["precision"] = precision_score(c, average = "binary", normalize = normalize)
+        result_dict["accuracy-score"] = accuracy_score(c, average = "binary", normalize = normalize)
+        result_dict["balanced Accuracy"] = balanced_accuracy(c, average = "binary", normalize = normalize)
+        result_dict["positive-predictive-value"] =  positive_predictive_value(c, average = "binary", normalize = normalize)
+        result_dict["negative-predictive-value"] = negative_predictive_value(c, average = "binary", normalize = normalize)
+        result_dict["false-negative-rate"]  = false_negative_rate(c, average = "binary", normalize = normalize)
+        result_dict["false-positive-rate"]  = false_positive_rate(c, average = "binary", normalize = normalize)
+        result_dict["false-discovery-rate"] = false_discovery_rate(c, average = "binary", normalize = normalize)
+        result_dict["f1-score"] = f1_score(c, average = "binary", normalize = normalize)
+        result_dict["false-omission-rate"]  = false_omission_rate(c , average = "binary", normalize = normalize)
+        result_dict["prevalence-threshold"] = prevalence_threshold(c, average = "binary", normalize = normalize)
+        result_dict["threat-score"] = threat_score(c, average = "binary", normalize = normalize)
+        result_dict["matthews-correlation-coefficient"] = matthews_correlation_coeff(c, average = "binary", normalize = normalize)
+        result_dict["fowlkes-mallows-index"] = fowlkes_mallows_index(c, average = "binary", normalize = normalize)
+        result_dict["informedness"] = informedness(c, average = "binary", normalize = normalize)
+        result_dict["markedness"] = markedness(c, average = "binary", normalize = normalize)
+        result_dict["jaccard-score-macroaverage"] = jaccard_score(c, average = "macro", normalize = normalize)
+        result_dict["jaccard-score-microaverage"] = jaccard_score(c, average = "micro", normalize = normalize)
+        result_dict["hamming-loss"] = hamming_loss(c)
         result_dict["cohen-kappa-score"] = cohen_kappa_score(c)
         return result_dict
     else
@@ -211,30 +212,30 @@ function classification_report(c::confusion_matrix; io::IO = Base.stdout, return
         println(io,"False Negatives: ", c.false_negatives)
         println(io,"\n",lpad("Labelwise Statistics", label_len * Int(round(size(c.matrix)[1] / 2)+1)), "\n")
         println(io,lpad(" ", 30), [lpad(i, label_len) for i in labels]...)
-        println(io,lpad("Condition Positive:", 30), [lpad(round(i, digits = digits), label_len) for i in condition_positive(c, average = "binary")]...)
-        println(io,lpad("Condition Negative:", 30), [lpad(round(i, digits = digits), label_len) for i in condition_negative(c, average = "binary")]...)
-        println(io,lpad("Predicted Positive:", 30), [lpad(round(i, digits = digits), label_len) for i in predicted_positive(c, average = "binary")]...)
-        println(io,lpad("Predicted Negative:", 30), [lpad(round(i, digits = digits), label_len) for i in predicted_negative(c, average = "binary")]...)
-        println(io,lpad("Correctly Classified:", 30), [lpad(round(i, digits = digits), label_len) for i in correctly_classified(c, average = "binary")]...)
-        println(io,lpad("Incorrectly Classified:", 30), [lpad(round(i, digits = digits), label_len) for i in incorrectly_classified(c, average = "binary")]...)
-        println(io,lpad("Sensitivity:", 30), [lpad(round(i, digits = digits), label_len) for i in sensitivity_score(c, average = "binary")]...)
-        println(io,lpad("Specificity:", 30), [lpad(round(i, digits = digits), label_len) for i in specificity_score(c, average = "binary")]...)
-        println(io,lpad("Precision:", 30) , [lpad(round(i, digits = digits), label_len) for i in precision_score(c, average = "binary")]...)
-        println(io,lpad("Accuracy Score:", 30 ) , [lpad(round(i, digits = digits), label_len) for i in accuracy_score(c, average = "binary")]...)
-        println(io,lpad("Balanced Accuracy:", 30), [lpad(round(i, digits = digits), label_len) for i in balanced_accuracy_score(c, average = "binary")]...)
-        println(io,lpad("Negative Predictive Value:", 30), [lpad(round(i, digits = digits), label_len) for i in negative_predictive_value(c, average = "binary")]...)
-        println(io,lpad("False Negative Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_negative_rate(c, average = "binary")]...)
-        println(io,lpad("False Positive Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_positive_rate(c, average = "binary")]...)
-        println(io,lpad("False Discovery Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_discovery_rate(c, average = "binary")]...)
-        println(io,lpad("False Omission Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_omission_rate(c, average = "binary")]...)
-        println(io,lpad("F1 Score:", 30), [lpad(round(i, digits = digits), label_len) for i in f1_score(c, average = "binary")]...)
-        println(io,lpad("Jaccard Score:", 30), [lpad(round(i, digits = digits), label_len) for i in jaccard_score(c, average = "binary")]...)
-        println(io,lpad("Prevalence Threshold:", 30), [lpad(round(i, digits = digits), label_len) for i in prevalence_threshold(c, average = "binary")]...)
-        println(io,lpad("Threat Score:", 30), [lpad(round(i, digits = digits), label_len) for i in threat_score(c, average = "binary")]...)
-        println(io,lpad("Matthews Correlation Coefficient", 30), [lpad(round(i, digits = digits), label_len) for i in matthews_correlation_coeff(c, average = "binary")]...)
-        println(io,lpad("Fowlkes Mallows Index:", 30), [lpad(round(i, digits = digits), label_len) for i in fowlkes_mallows_index(c, average = "binary")]...)
-        println(io,lpad("Informedness:", 30), [lpad(round(i, digits = digits), label_len) for i in informedness(c, average = "binary")]...)
-        println(io,lpad("Markedness:", 30), [lpad(round(i, digits = digits), label_len) for i in markedness(c, average = "binary")]...)
+        println(io,lpad("Condition Positive:", 30), [lpad(round(i, digits = digits), label_len) for i in condition_positive(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Condition Negative:", 30), [lpad(round(i, digits = digits), label_len) for i in condition_negative(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Predicted Positive:", 30), [lpad(round(i, digits = digits), label_len) for i in predicted_positive(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Predicted Negative:", 30), [lpad(round(i, digits = digits), label_len) for i in predicted_negative(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Correctly Classified:", 30), [lpad(round(i, digits = digits), label_len) for i in correctly_classified(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Incorrectly Classified:", 30), [lpad(round(i, digits = digits), label_len) for i in incorrectly_classified(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Sensitivity:", 30), [lpad(round(i, digits = digits), label_len) for i in sensitivity_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Specificity:", 30), [lpad(round(i, digits = digits), label_len) for i in specificity_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Precision:", 30) , [lpad(round(i, digits = digits), label_len) for i in precision_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Accuracy Score:", 30 ) , [lpad(round(i, digits = digits), label_len) for i in accuracy_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Balanced Accuracy:", 30), [lpad(round(i, digits = digits), label_len) for i in balanced_accuracy_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Negative Predictive Value:", 30), [lpad(round(i, digits = digits), label_len) for i in negative_predictive_value(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("False Negative Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_negative_rate(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("False Positive Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_positive_rate(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("False Discovery Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_discovery_rate(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("False Omission Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_omission_rate(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("F1 Score:", 30), [lpad(round(i, digits = digits), label_len) for i in f1_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Jaccard Score:", 30), [lpad(round(i, digits = digits), label_len) for i in jaccard_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Prevalence Threshold:", 30), [lpad(round(i, digits = digits), label_len) for i in prevalence_threshold(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Threat Score:", 30), [lpad(round(i, digits = digits), label_len) for i in threat_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Matthews Correlation Coefficient", 30), [lpad(round(i, digits = digits), label_len) for i in matthews_correlation_coeff(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Fowlkes Mallows Index:", 30), [lpad(round(i, digits = digits), label_len) for i in fowlkes_mallows_index(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Informedness:", 30), [lpad(round(i, digits = digits), label_len) for i in informedness(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Markedness:", 30), [lpad(round(i, digits = digits), label_len) for i in markedness(c, average = "binary", normalize = normalize)]...)
         println(io,"\n",lpad("General Statistics", label_len * Int(round(size(c.matrix)[1] / 2)+1)), "\n")
         println(io, lpad("Accuracy Score:\t",30), accuracy_score(c, average = "macro"))
         println(io, lpad("Cohen Kappa Score:\t", 30), cohen_kappa_score(c))
@@ -304,7 +305,7 @@ julia> condition_positive(x, class_name = "knet")
 _See also_ : `confusion_matrix`, `condition_negative`, `predicted_positive`, `predicted_negative`
 
 """
-function condition_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing)
+function condition_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -315,11 +316,11 @@ function condition_positive(c::confusion_matrix; ith_class = nothing, class_name
         x = c.true_positives[index] + c.false_negatives[index]
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize)
 end
 
-condition_positive(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-condition_positive(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+condition_positive(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false) =
+condition_positive(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 ##
 """
@@ -385,22 +386,22 @@ julia> condition_negative(x, class_name = 3)
 _See also_ : `confusion_matrix`, `condition_positive`, `predicted_positive`, `predicted_negative`
 
 """
-function condition_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing)
+function condition_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
-        x = c.true_negatives + c.false_positives
+        x = c.true_negatives .+ c.false_positives
     else
         x = c.true_negatives[index] + c.false_positives[index]
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize)
 end
 
-condition_negative(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-condition_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+condition_negative(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+condition_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 ```predicted_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -464,23 +465,23 @@ julia> predicted_positive(x, class_name = 3)
 _See also_ : `confusion_matrix`, `condition_negative`, `predicted_positive`, `predicted_negative`
 
 """
-function predicted_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing)
+function predicted_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
 
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
-        x = c.true_positives + c.false_positives
+        x = c.true_positives .+ c.false_positives
     else
         x = c.true_positives[index] + c.false_positives[index]
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize)
 end
 
-predicted_positive(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-predicted_positive(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+predicted_positive(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+predicted_positive(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 ```predicted_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -544,23 +545,23 @@ julia> predicted_negative(x, class_name = 4)
 _See also_ : `confusion_matrix`, `condition_negative`, `predicted_positive`, `condition_positive`
 
 """
-function predicted_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing)
+function predicted_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
 
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
-        x = c.true_negatives + c.false_negatives
+        x = c.true_negatives .+ c.false_negatives
     else
         x = c.true_negatives[index] + c.false_negatives[index]
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize )
 end
 
-predicted_negative(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-predicted_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+predicted_negative(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false) =
+predicted_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize)
 
 """
 ```correctly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -624,24 +625,24 @@ julia> correctly_classified(x, ith_class = 1)
 _See also_ : `confusion_matrix`, `predicted_negative`, `predicted_positive`, `incorrectly_classified`
 
 """
-function correctly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing)
+function correctly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
 
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
-        x = c.true_positives + c.true_negatives
+        x = c.true_positives .+ c.true_negatives
     else
         x = c.true_positives[index] + c.true_negatives[index]
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize)
 end
 
 
-correctly_classified(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-correctly_classified(confusion_matrix(expected,predicted); ith_class = ith_class, class_name = class_name, average = average)
+correctly_classified(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+correctly_classified(confusion_matrix(expected,predicted); ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 ```incorrectly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -706,23 +707,23 @@ julia> incorrectly_classified(x, ith_class = 2)
 _See also_ : `confusion_matrix`, `predicted_negative`, `predicted_positive`, `correctly_classified`
 
 """
-function incorrectly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing)
+function incorrectly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
 
     index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
     if index == -1
-        x = c.false_positives + c.false_negatives
+        x = c.false_positives .+ c.false_negatives
     else
         x = c.false_positives[index] + c.false_negatives[index]
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize)
 end
 
-incorrectly_classified(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-incorrectly_classified(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+incorrectly_classified(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false) =
+incorrectly_classified(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 ```sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -770,7 +771,7 @@ julia> sensitivity_score(x, class_name = 1)
 
 _See also_ : `confusion_matrix` , `recall_score` ,  `balanced_accuracy_score`, `specificity_score`
 """
-function sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing , average = "macro", weights = nothing)
+function sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing , average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -784,11 +785,11 @@ function sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name 
         denominator = condition_positive(c, ith_class = index)
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
-sensitivity_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-sensitivity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+sensitivity_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+sensitivity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 ```recall_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -837,12 +838,12 @@ julia> recall_score(x, class_name = 1)
 _See also_ : `confusion_matrix` , `sensitivity_score` ,  `balanced_accuracy_score`, `specificity_score`
 
 """
-function recall_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
-    return sensitivity_score(c, ith_class = ith_class, class_name = class_name, average = average)
+function recall_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", normalize = false, weights = nothing)
+    return sensitivity_score(c, ith_class = ith_class, class_name = class_name, average = average, normalize = normalize, weights = weights)
 end
 
-recall_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-recall_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+recall_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false, weights = nothing) =
+recall_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize, weights = weights)
 
 """
 ```specificity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -889,7 +890,7 @@ julia> specificity(x,ith_class = 2)
 _See also_ : ```confusion_matrix```, ```sensitivity_score```, ```balanced_accuracy_score```,```recall_score```
 
 """
-function specificity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function specificity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -903,12 +904,12 @@ function specificity_score(c::confusion_matrix; ith_class = nothing, class_name 
         denominator =  condition_negative(c, ith_class = index)
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
 
-specificity_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-specificity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+specificity_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+specificity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 ```precision_score(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -958,7 +959,7 @@ julia>  precision_score(x, class_name = 3)
 _See also_ : ```confusion_matrix```, ```sensitivity_score```, ```balanced_accuracy_score```,```recall_score```
 
 """
-function precision_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function precision_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -972,12 +973,12 @@ function precision_score(c::confusion_matrix; ith_class = nothing, class_name = 
         denominator = c.true_positives[index] + c.false_positives[index]
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
 
-precision_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-precision_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+precision_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false) =
+precision_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 ```positive_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
@@ -1027,12 +1028,12 @@ julia> positive_predictive_value(x, ith_class = 3)
 _See also_ : ```negative_predictive_value```, ```confusion_matrix```, ```sensitivity_score```, ```balanced_accuracy_score```,```recall_score```
 
 """
-function positive_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary")
-   return precision_score(c, class_name = class_name, ith_class = ith_class, average = average)
+function positive_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", normalize = false, weights = nothing)
+   return precision_score(c, class_name = class_name, ith_class = ith_class, average = average, normalize = normalize, weights = weights)
 end
 
-positive_predictive_value(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-positive_predictive_value(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+positive_predictive_value(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false, weights = nothing) =
+positive_predictive_value(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize, weights = weights)
 
 """
 ```accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, normalize = true, sample_weight = nothing) ```
@@ -1091,11 +1092,11 @@ function accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = n
         denominator = (c.true_positives[index] .+ c.false_positives[index])
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division; normalize = normalize)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
 accuracy_score(expected, predicted; ith_class = nothing, class_name = nothing, normalize = true, weights = nothing)  =
-accuracy_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, normalize = true, weights = nothing)
+accuracy_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, normalize = normalize, weights = nothing)
 
 """
 ```balanced_accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing) ```
@@ -1163,11 +1164,11 @@ function balanced_accuracy_score(c::confusion_matrix; ith_class = nothing, class
         denominator = 2
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize = normalize)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
-balanced_accuracy_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-balanced_accuracy_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+balanced_accuracy_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+balanced_accuracy_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 
@@ -1209,7 +1210,7 @@ julia> negative_predictive_value(x)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```positive_predictive_value```, ```balanced_accuracy_score```
 
 """
-function negative_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing , average = "macro", weights = nothing)
+function negative_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing , average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1223,11 +1224,11 @@ function negative_predictive_value(c::confusion_matrix; ith_class = nothing, cla
         denominator = c.true_negatives[index] + c.false_negatives[index]
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
-negative_predictive_value(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-negative_predictive_value(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+negative_predictive_value(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+negative_predictive_value(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 
@@ -1271,7 +1272,7 @@ julia> false_negative_rate(x)
  _See Also_ :   ```confusion_matrix```, ```false_positive_rate```, ```positive_predictive_value```, ```balanced_accuracy_score```
 
 """
-function false_negative_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function false_negative_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1285,11 +1286,11 @@ function false_negative_rate(c::confusion_matrix; ith_class = nothing, class_nam
         denominator = condition_positive(c,ith_class = index)
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
-false_negative_rate(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-false_negative_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+false_negative_rate(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+false_negative_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 
@@ -1330,7 +1331,7 @@ julia> false_positive_rate(x)
 
  _See Also_ :   ```confusion_matrix```, ```false_negative_rate```, ```positive_predictive_value```, ```balanced_accuracy_score```
 """
-function false_positive_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function false_positive_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1345,11 +1346,11 @@ function false_positive_rate(c::confusion_matrix; ith_class = nothing, class_nam
     end
 
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
-false_positive_rate(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-false_positive_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+false_positive_rate(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false) =
+false_positive_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 
@@ -1391,7 +1392,7 @@ julia> false_discovery_rate(x, ith_class = 3)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```positive_predictive_value```, ```false_omission_rate```
 
 """
-function false_discovery_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function false_discovery_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1406,11 +1407,11 @@ function false_discovery_rate(c::confusion_matrix; ith_class = nothing, class_na
     end
 
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
-false_discovery_rate(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-false_discovery_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+false_discovery_rate(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+false_discovery_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 ```false_omission_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing) ```
@@ -1450,7 +1451,7 @@ julia> false_omission_rate(x, ith_class = 5)
 
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```positive_predictive_value```, ```false_discovery_rate```
 """
-function false_omission_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function false_omission_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1462,11 +1463,11 @@ function false_omission_rate(c::confusion_matrix; ith_class = nothing, class_nam
         x = 1 - negative_predictive_value(c, ith_class = index)
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize)
 end
 
-false_omission_rate(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-false_omission_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+false_omission_rate(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false) =
+false_omission_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 ```f1_score(c::confusion_matrix; ith_class = nothing, class_name = nothing) ```
@@ -1507,7 +1508,7 @@ julia> f1_score(x, class_name = 2)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```recall_score```, ```false_omission_rate```
 
 """
-function f1_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function f1_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1522,11 +1523,11 @@ function f1_score(c::confusion_matrix; ith_class = nothing, class_name = nothing
     end
 
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
-f1_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-f1_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+f1_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+f1_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 
@@ -1574,7 +1575,7 @@ julia> prevalence_threshold(x, ith_class = 1)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```recall_score```, ```f1_score```
 
 """
-function prevalence_threshold(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function prevalence_threshold(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1587,12 +1588,12 @@ function prevalence_threshold(c::confusion_matrix; ith_class = nothing, class_na
         denominator = sensitivity_score(c,ith_class = index) + specificity_score(c,ith_class = index) - 1
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
 
-prevalence_threshold(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-prevalence_threshold(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+prevalence_threshold(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false) =
+prevalence_threshold(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 
@@ -1634,7 +1635,7 @@ julia> threat_score(x, ith_class = 3)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```recall_score```, ```f1_score```
 
 """
-function threat_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function threat_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1648,11 +1649,11 @@ function threat_score(c::confusion_matrix; ith_class = nothing, class_name = not
         denominator = c.true_positives[index] .+ c.false_negatives[index] .+ c.false_positives[index]
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
-threat_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-threat_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+threat_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false) =
+threat_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 
@@ -1697,7 +1698,7 @@ julia> matthews_correlation_coeff(x, ith_class = 3)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```threat_score```, ```f1_score```
 
 """
-function matthews_correlation_coeff(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function matthews_correlation_coeff(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1710,11 +1711,11 @@ function matthews_correlation_coeff(c::confusion_matrix; ith_class = nothing, cl
         x = sqrt.( precision_score(c, ith_class = index) .* sensitivity_score(c, ith_class = index) .* specificity_score(c, ith_class = index) .* negative_predictive_value(c, ith_class = index)) .- sqrt.(false_discovery_rate(c, ith_class = index) .* false_negative_rate(c, ith_class = index) .* false_positive_rate(c, ith_class = index) .* false_omisssion_rate(c, ith_class = index))
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize)
 end
 
-matthews_correlation_coeff(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-matthews_correlation_coeff(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+matthews_correlation_coeff(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+matthews_correlation_coeff(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 
@@ -1760,7 +1761,7 @@ julia> fowlkes_mallows_index(x, ith_class = 2)
 
 _See Also_ :   ```confusion_matrix```, ```matthews_correlation_coeff```, ```threat_score```, ```f1_score```
 """
-function fowlkes_mallows_index(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function fowlkes_mallows_index(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1772,12 +1773,12 @@ function fowlkes_mallows_index(c::confusion_matrix; ith_class = nothing, class_n
         x = sqrt.(precision_score(c, average = "binary") .+ sensitivity_score(c, average = "binary"))
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize )
 end
 
 
-fowlkes_mallows_index(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-fowlkes_mallows_index(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+fowlkes_mallows_index(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+fowlkes_mallows_index(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 
@@ -1821,7 +1822,7 @@ julia> informedness(x,ith_class = 3)
 
 _See Also_ :   ```confusion_matrix```, ```matthews_correlation_coeff```, ```markedness```, ```f1_score```
 """
-function informedness(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function informedness(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1834,11 +1835,11 @@ function informedness(c::confusion_matrix; ith_class = nothing, class_name = not
         x = specificity_score(c, ith_class = index) .+ sensitivity_score(c, ith_class = index) -1
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize)
 end
 
-informedness(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary")  =
-informedness(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+informedness(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false)  =
+informedness(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 
@@ -1883,7 +1884,7 @@ julia> markedness(x, ith_class = 1)
 _See Also_ :   ```confusion_matrix```, ```matthews_correlation_coeff```, ```informedness```, ```f1_score```
 
 """
-function markedness(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function markedness(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -1895,11 +1896,11 @@ function markedness(c::confusion_matrix; ith_class = nothing, class_name = nothi
         x = precision_score(c, ith_class = index) .+ negative_predictive_value(c, ith_class = index) - 1
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(x, nothing, weights, average, c.zero_division)
+    return _average_helper(x, nothing, weights, average, c.zero_division, normalize)
 end
 
-markedness(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary") =
-markedness(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average)
+markedness(expected, predicted; ith_class = nothing, class_name = nothing, average = "binary", normalize = false) =
+markedness(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
 ```cohen_kappa_score(c::confusion_matrix; weights = nothing) ```
@@ -2036,7 +2037,7 @@ julia> hamming_loss(x)
 _See Also_ :   ```confusion_matrix```, ```accuracy_score```, ```hamming_loss```, ```f1_score```
 
 """
-function jaccard_score(c::confusion_matrix;  ith_class = nothing, class_name = nothing, average = "macro", weights = nothing)
+function jaccard_score(c::confusion_matrix;  ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
     @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -2050,8 +2051,8 @@ function jaccard_score(c::confusion_matrix;  ith_class = nothing, class_name = n
         denominator =  c.true_positives[index] + c.false_negatives[index] + c.false_positives[index]
     end
     if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division)
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
 end
 
-jaccard_score(expected, predicted; average = "binary", sample_weight = nothing) =
-jaccard_score(confusion_matrix(expected,predicted), average = average, sample_weight = sample_weight)
+jaccard_score(expected, predicted; average = "binary", weights = nothing, normalize = false) =
+jaccard_score(confusion_matrix(expected,predicted), average = average, weights = weights, normalize = normalize)
