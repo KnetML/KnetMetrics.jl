@@ -1,4 +1,4 @@
-export classification_report, condition_positive, condition_negative, predicted_positive,predicted_negative, correctly_classified, incorrectly_classified, sensitivity_score, recall_score, specificity_score, precision_score, positive_predictive_value, accuracy_score, balanced_accuracy_score, negative_predictive_value, false_negative_rate, false_positive_rate, false_discovery_rate, false_omission_rate, f1_score, prevalence_threshold, threat_score, matthews_correlation_coeff, fowlkes_mallows_index, informedness, markedness, cohen_kappa_score, hamming_loss, jaccard_score, confusion_params
+export classification_report, condition_positive, condition_negative, predicted_positive,predicted_negative, correctly_classified, incorrectly_classified, sensitivity_score, recall_score, specificity_score, precision_score, positive_predictive_value, accuracy_score,  _score, negative_predictive_value, false_negative_rate, false_positive_rate, false_discovery_rate, false_omission_rate, f1_score, prevalence_threshold, threat_score, matthews_correlation_coeff, fowlkes_mallows_index, informedness, markedness, cohen_kappa_score, hamming_loss, jaccard_score, confusion_params
 
 using Statistics: mean
 
@@ -50,7 +50,7 @@ function _average_helper(numerator, denominator, weights, average, zero_division
 end
 
 """
-```classification_report(c::confusion_matrix;<keyword arguments>)```
+```classification_report(c::confusion_matrix; keywords)```
 
 Return all the values listed below if `return_dict` is true. Else, write the values to the given IO element.
 
@@ -60,31 +60,31 @@ Returned dictionary:
     "false-positives" => c.false_positives
     "true-negatives" => c.true_negatives
     "false-negatives" => c.false_negatives
-    "condition-positive" => condition_positive(c)
-    "condition-negative" => condition_negative(c)
-    "predicted-positive" => predicted_positive(c)
-    "predicted-negative" => predicted_negative(c)
-    "correctly-classified" => correctly_classified(c)
-    "incorrectly-classified" => incorrectly_classified(c)
-    "sensitivity" => sensitivity_score(c)
-    "specificity" => specificity_score(c)
-    "precision" => precision_score(c)
-    "accuracy-score" => accuracy_score(c)
-    "balanced Accuracy" => balanced_accuracy(c)
-    "positive-predictive-value" =>  positive_predictive_value(c)
-    "negative-predictive-value" => negative_predictive_value(c)
-    "false-negative-rate"  => false_negative_rate(c)
-    "false-positive-rate"  => false_positive_rate(c)
-    "false-discovery-rate" => false_discovery_rate(c)
-    "false-omission-rate"  => false_omission_rate(c)
-    "f1-score" => f1_score(c)
-    "prevalence-threshold" => prevalence_threshold(c)
-    "threat-score" => threat_score(c)
-    "matthews-correlation-coefficient" => matthews_correlation_coeff(c)
-    "fowlkes-mallows-index" => fowlkes_mallows_index(c)
-    "informedness" => informedness(c)
-    "markedness" => markedness(c)
-    "jaccard-score-nonaverage" => jaccard_score(c, average = nothing)
+    "condition-positive" => condition_positive(c, average = "binary")
+    "condition-negative" => condition_negative(c, average = "binary")
+    "predicted-positive" => predicted_positive(c, average = "binary")
+    "predicted-negative" => predicted_negative(c, average = "binary")
+    "correctly-classified" => correctly_classified(c, average = "binary")
+    "incorrectly-classified" => incorrectly_classified(c, average = "binary")
+    "sensitivity" => sensitivity_score(c, average = "binary")
+    "specificity" => specificity_score(c, average = "binary")
+    "precision" => precision_score(c, average = "binary")
+    "accuracy-score" => accuracy_score(c, average = "binary")
+    "balanced-accuracy" =>  balanced_accuracy_score(c, average = "binary")
+    "positive-predictive-value" =>  positive_predictive_value(c, average = "binary")
+    "negative-predictive-value" => negative_predictive_value(c, average = "binary")
+    "false-negative-rate"  => false_negative_rate(c, average = "binary")
+    "false-positive-rate"  => false_positive_rate(c, average = "binary")
+    "false-discovery-rate" => false_discovery_rate(c, average = "binary")
+    "false-omission-rate"  => false_omission_rate(c, average = "binary")
+    "f1-score" => f1_score(c, average = "binary")
+    "prevalence-threshold" => prevalence_threshold(c, average = "binary")
+    "threat-score" => threat_score(c, average = "binary")
+    "matthews-correlation-coefficient" => matthews_correlation_coeff(c, average = "binary")
+    "fowlkes-mallows-index" => fowlkes_mallows_index(c, average = "binary")
+    "informedness" => informedness(c, average = "binary")
+    "markedness" => markedness(c, average = "binary")
+    "jaccard-score-macroaverage" => jaccard_score(c, average = "macro")
     "jaccard-score-microaverage" => jaccard_score(c, average = "micro")
     "hamming-loss" => hamming_loss(c)
     "cohen-kappa-score" => cohen_kappa_score(c)
@@ -95,73 +95,68 @@ For a sample output to the given IO element, see Example section.
 ## Keywords
 
     \n**`io`** : ::IO, default = Base.stdout
-    \n\tIO element to write to
+    \n\tIO element to write to. If 'return_dict' is true, this value will be ignored.
 
     \n**`return_dict`** : default = false
-    \n\tReturn a dictionary as specified below if true; print the values specified below if false
+    \n\tReturn a dictionary instead of printing if true.
 
     \n**`target_names`** : vector-like, default = nothing
-    \n\tIf not nothing, replace the labels of the given confusion matrix object whilst printing
+    \n\tIf not nothing, replace the labels of the given confusion matrix object whilst printing. If 'return_dict' is true, this will be ignored.
 
     \n**`digits`** : Int, default = 2
     \n\tDetermines how the rounding procedure will be digitized. If `return_dict` is true, this will be ignored and the values
-    will be placed into the dictionary with full precision
+    will be placed into the dictionary with full precision.
 
 ## Example
 
 ```julia-repl
 
-julia> y_true = [1,1,1,2,3,3,1,2,1,1,2,1];
+julia> y_true = [1,1,1,2,3,3,1,3,1,1,2,1];
 
-julia> y_pred = [1,3,2,1,2,3,1,1,2,3,2,1];
+julia> y_pred = [1,3,2,2,2,3,1,1,2,3,2,1];
 
-julia> x = confusion_matrix(y_true, y_pred)
-┌ Warning: No labels provided, constructing a label set by union of the unique elements in Expected and Predicted arrays
-└ @ Path
 julia> classification_report(x)
 Summary:
 confusion_matrix
-True Positives: [3, 1, 1]
-False Positives: [2, 3, 2]
-True Negatives: [3, 6, 8]
-False Negatives: [4, 2, 1]
+True Positives: [3, 2, 1]
+False Positives: [1, 3, 2]
+True Negatives: [4, 7, 7]
+False Negatives: [4, 0, 2]
 
-Labelwise Statistics
+    Labelwise Statistics
 
-                                  1    2    3
-           Condition Positive:  7.0  3.0  2.0
-           Condition Negative:  5.0  9.0 10.0
-           Predicted Positive:  5.0  4.0  3.0
-           Predicted Negative:  7.0  8.0  9.0
-         Correctly Classified:  6.0  7.0  9.0
-       Incorrectly Classified:  6.0  5.0  3.0
-                  Sensitivity: 0.43 0.33  0.5
-                  Specificity:  0.6 0.67  0.8
-                    Precision:  0.6 0.25 0.33
-               Accuracy Score:  0.5 0.58 0.75
-            Balanced Accuracy: 0.51  0.5 0.65
-    Negative Predictive Value: 0.43 0.75 0.89
-          False Negative Rate: 0.57 0.67  0.5
-          False Positive Rate:  0.4 0.33  0.2
-         False Discovery Rate:  0.4 0.33  0.2
-          False Omission Rate: 0.57 0.25 0.11
-                     F1 Score:  0.5 0.29  0.4
-                Jaccard Score: 0.33 0.17 0.25
-┌ Warning: Zero division, replacing NaN or Inf with 0
-└ @ Main Path
-         Prevalence Threshold:16.73  Inf 1.05
-                 Threat Score: 0.33 0.17 0.25
-Matthews Correlation Coefficient 0.03  0.0 0.26
-        Fowlkes Mallows Index: 0.51 0.29 0.41
-                 Informedness: 0.03  0.0  0.3
-                   Markedness:-0.74-0.81 -0.7
+                                          1       2       3
+                Condition Positive:     7.0     2.0     3.0
+                Condition Negative:     5.0    10.0     9.0
+                Predicted Positive:     4.0     5.0     3.0
+                Predicted Negative:     8.0     7.0     9.0
+              Correctly Classified:     7.0     9.0     8.0
+            Incorrectly Classified:     5.0     3.0     4.0
+                       Sensitivity:    0.43     1.0    0.33
+                       Specificity:     0.8     0.7    0.78
+                         Precision:    0.75     0.4    0.33
+                    Accuracy Score:    0.75     0.4    0.33
+                 Balanced Accuracy:    0.43     1.0    0.33
+         Negative Predictive Value:     0.5     1.0    0.78
+               False Negative Rate:    0.57     0.0    0.67
+               False Positive Rate:     0.2     0.3    0.22
+              False Discovery Rate:     0.2     0.3    0.22
+               False Omission Rate:     0.5     0.0    0.22
+                          F1 Score:    0.55    0.57    0.33
+                     Jaccard Score:    0.38     0.4     0.2
+              Prevalence Threshold:    0.41    0.35    0.45
+                      Threat Score:    0.38     0.4     0.2
+  Matthews Correlation Coefficient:    0.25    0.53    0.17
+             Fowlkes Mallows Index:    1.09    1.18    0.82
+                      Informedness:    0.23     0.7    0.11
+                        Markedness:    0.25     0.4    0.11
 
-General Statistics
+      General Statistics
 
-              Accuracy Score:   0.1527777777777778
-           Cohen Kappa Score:   0.07692307692307698
-                Hamming Loss:   0.5833333333333334
-               Jaccard Score:   0.2631578947368421
+              Accuracy Score:   0.4944444444444444
+           Cohen Kappa Score:   0.25773195876288646
+                Hamming Loss:   0.5
+               Jaccard Score:   0.325
 ```
 """
 function classification_report(c::confusion_matrix; io::IO = Base.stdout, return_dict = false, target_names = nothing, digits = 2, normalize = false)
@@ -181,7 +176,7 @@ function classification_report(c::confusion_matrix; io::IO = Base.stdout, return
         result_dict["specificity"] = specificity_score(c, average = "binary", normalize = normalize)
         result_dict["precision"] = precision_score(c, average = "binary", normalize = normalize)
         result_dict["accuracy-score"] = accuracy_score(c, average = "binary", normalize = normalize)
-        result_dict["balanced Accuracy"] = balanced_accuracy(c, average = "binary", normalize = normalize)
+        result_dict["balanced Accuracy"] = balanced_accuracy_score(c, average = "binary", normalize = normalize)
         result_dict["positive-predictive-value"] =  positive_predictive_value(c, average = "binary", normalize = normalize)
         result_dict["negative-predictive-value"] = negative_predictive_value(c, average = "binary", normalize = normalize)
         result_dict["false-negative-rate"]  = false_negative_rate(c, average = "binary", normalize = normalize)
@@ -204,38 +199,38 @@ function classification_report(c::confusion_matrix; io::IO = Base.stdout, return
         labels = target_names != nothing && length(target_names) == length(c.Labels) ? target_names : c.Labels
         len = maximum([length(string(i)) for i in labels])
         label_size = length(c.Labels)
-        label_len = len + digits + 2
+        label_len = len + digits + 5
         println(io,"Summary:\n", summary(c))
         println(io,"True Positives: ", c.true_positives)
         println(io,"False Positives: ", c.false_positives)
         println(io,"True Negatives: ", c.true_negatives)
         println(io,"False Negatives: ", c.false_negatives)
         println(io,"\n",lpad("Labelwise Statistics", label_len * Int(round(size(c.matrix)[1] / 2)+1)), "\n")
-        println(io,lpad(" ", 30), [lpad(i, label_len) for i in labels]...)
-        println(io,lpad("Condition Positive:", 30), [lpad(round(i, digits = digits), label_len) for i in condition_positive(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Condition Negative:", 30), [lpad(round(i, digits = digits), label_len) for i in condition_negative(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Predicted Positive:", 30), [lpad(round(i, digits = digits), label_len) for i in predicted_positive(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Predicted Negative:", 30), [lpad(round(i, digits = digits), label_len) for i in predicted_negative(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Correctly Classified:", 30), [lpad(round(i, digits = digits), label_len) for i in correctly_classified(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Incorrectly Classified:", 30), [lpad(round(i, digits = digits), label_len) for i in incorrectly_classified(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Sensitivity:", 30), [lpad(round(i, digits = digits), label_len) for i in sensitivity_score(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Specificity:", 30), [lpad(round(i, digits = digits), label_len) for i in specificity_score(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Precision:", 30) , [lpad(round(i, digits = digits), label_len) for i in precision_score(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Accuracy Score:", 30 ) , [lpad(round(i, digits = digits), label_len) for i in accuracy_score(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Balanced Accuracy:", 30), [lpad(round(i, digits = digits), label_len) for i in balanced_accuracy_score(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Negative Predictive Value:", 30), [lpad(round(i, digits = digits), label_len) for i in negative_predictive_value(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("False Negative Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_negative_rate(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("False Positive Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_positive_rate(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("False Discovery Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_discovery_rate(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("False Omission Rate:", 30), [lpad(round(i, digits = digits), label_len) for i in false_omission_rate(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("F1 Score:", 30), [lpad(round(i, digits = digits), label_len) for i in f1_score(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Jaccard Score:", 30), [lpad(round(i, digits = digits), label_len) for i in jaccard_score(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Prevalence Threshold:", 30), [lpad(round(i, digits = digits), label_len) for i in prevalence_threshold(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Threat Score:", 30), [lpad(round(i, digits = digits), label_len) for i in threat_score(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Matthews Correlation Coefficient", 30), [lpad(round(i, digits = digits), label_len) for i in matthews_correlation_coeff(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Fowlkes Mallows Index:", 30), [lpad(round(i, digits = digits), label_len) for i in fowlkes_mallows_index(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Informedness:", 30), [lpad(round(i, digits = digits), label_len) for i in informedness(c, average = "binary", normalize = normalize)]...)
-        println(io,lpad("Markedness:", 30), [lpad(round(i, digits = digits), label_len) for i in markedness(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad(" ", 35), [lpad(i, label_len) for i in labels]...)
+        println(io,lpad("Condition Positive:", 35), [lpad(round(i, digits = digits), label_len) for i in condition_positive(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Condition Negative:", 35), [lpad(round(i, digits = digits), label_len) for i in condition_negative(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Predicted Positive:", 35), [lpad(round(i, digits = digits), label_len) for i in predicted_positive(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Predicted Negative:", 35), [lpad(round(i, digits = digits), label_len) for i in predicted_negative(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Correctly Classified:", 35), [lpad(round(i, digits = digits), label_len) for i in correctly_classified(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Incorrectly Classified:", 35), [lpad(round(i, digits = digits), label_len) for i in incorrectly_classified(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Sensitivity:", 35), [lpad(round(i, digits = digits), label_len) for i in sensitivity_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Specificity:", 35), [lpad(round(i, digits = digits), label_len) for i in specificity_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Precision:", 35) , [lpad(round(i, digits = digits), label_len) for i in precision_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Accuracy Score:", 35 ) , [lpad(round(i, digits = digits), label_len) for i in accuracy_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Balanced Accuracy:", 35), [lpad(round(i, digits = digits), label_len) for i in balanced_accuracy_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Negative Predictive Value:", 35), [lpad(round(i, digits = digits), label_len) for i in negative_predictive_value(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("False Negative Rate:", 35), [lpad(round(i, digits = digits), label_len) for i in false_negative_rate(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("False Positive Rate:", 35), [lpad(round(i, digits = digits), label_len) for i in false_positive_rate(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("False Discovery Rate:", 35), [lpad(round(i, digits = digits), label_len) for i in false_discovery_rate(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("False Omission Rate:", 35), [lpad(round(i, digits = digits), label_len) for i in false_omission_rate(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("F1 Score:", 35), [lpad(round(i, digits = digits), label_len) for i in f1_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Jaccard Score:", 35), [lpad(round(i, digits = digits), label_len) for i in jaccard_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Prevalence Threshold:", 35), [lpad(round(i, digits = digits), label_len) for i in prevalence_threshold(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Threat Score:", 35), [lpad(round(i, digits = digits), label_len) for i in threat_score(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Matthews Correlation Coefficient:", 35), [lpad(round(i, digits = digits), label_len) for i in matthews_correlation_coeff(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Fowlkes Mallows Index:", 35), [lpad(round(i, digits = digits), label_len) for i in fowlkes_mallows_index(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Informedness:", 35), [lpad(round(i, digits = digits), label_len) for i in informedness(c, average = "binary", normalize = normalize)]...)
+        println(io,lpad("Markedness:", 35), [lpad(round(i, digits = digits), label_len) for i in markedness(c, average = "binary", normalize = normalize)]...)
         println(io,"\n",lpad("General Statistics", label_len * Int(round(size(c.matrix)[1] / 2)+1)), "\n")
         println(io, lpad("Accuracy Score:\t",30), accuracy_score(c, average = "macro"))
         println(io, lpad("Cohen Kappa Score:\t", 30), cohen_kappa_score(c))
@@ -252,14 +247,15 @@ classification_report(confusion_matrix(expected, predicted); io = Base.stdout, r
 # Confusion Matrix Evaluation Functions
 
 """
-```condition_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
+```condition_positive(c::confusion_matrix; keywords)```
+```condition_positive(y_true, y_pred; keywords)```
 
 Return condition positive values of either the whole confusion matrix or the classes specified by `class_name` or `ith_class`
 arguments.
 
     Condition Positives: True Positives + False Negatives
 
-## Keyowrds
+## Keywords
 
 **`ith_class`** : Int, default = nothing
 Return the results for the ith class in the ith label of the label list of the given confusion matrix object.
@@ -268,6 +264,28 @@ Return the results for the ith class in the ith label of the label list of the g
 Return the results for the class of the speicifed value in the ith label of the label list of the given confusion matrix object.
 
 If both `class_name` and `ith_class` arguments are equal to `nothing`, return condition positive values for all the elements in the labels arrays
+
+**`average`** : String, default = "binary"
+    "binary" :
+        Return the classwise values.
+
+    "macro" :
+        Return the macro average (mean) of the classwise values.
+
+    "micro" :
+        Return micro average (sum of the numerator divided by sum of the denominator instead of elementwise division) of the classwise values
+
+    "weighted" :
+        Return the weighted average (weighted mean with true positives per class) of the classwise values.
+
+    "sample-weights" :
+        Return the weighted average (weighted mean with given weights per class) of the classwise values.
+
+**`weights`** : Array, default = nothing
+    Use the given weights whilst calculating 'sample_weights' option. If average is not 'sample-weigts' this will be ignored.
+
+**`normalize`** : Bool, default = false
+    If true, normalize the result.
 
 ## Example
 
@@ -325,6 +343,7 @@ condition_positive(confusion_matrix(expected,predicted), ith_class = ith_class, 
 ##
 """
 ```condition_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
+```condition_negative(y_true, y_pred; ith_class = nothing, class_name = nothing)```
 
 Return condition negative values of either the whole confusion matrix or the classes specified by `class_name` or `ith_class`
 arguments.
@@ -341,45 +360,59 @@ Return the results for the class of the speicifed value in the ith label of the 
 
 If both `class_name` and `ith_class` arguments are equal to `nothing`, return condition negative values for all the elements in the labels arrays
 
+**`average`** : String, default = "binary"
+    "binary" :
+        Return the classwise values.
+
+    "macro" :
+        Return the macro average (mean) of the classwise values.
+
+    "micro" :
+        Return micro average (sum of the numerator divided by sum of the denominator instead of elementwise division) of the classwise values
+
+    "weighted" :
+        Return the weighted average (weighted mean with true positives per class) of the classwise values.
+
+    "sample-weights" :
+        Return the weighted average (weighted mean with given weights per class) of the classwise values.
+
+**`weights`** : Array, default = nothing
+    Use the given weights whilst calculating 'sample_weights' option. If average is not 'sample-weigts' this will be ignored.
+
+**`normalize`** : Bool, default = false
+    If true, normalize the result.
+
 ## Example
 
 First example no indexing:\n\n
 
 ```julia-repl
-julia> y_pred = [1,2,3,1,4,2,1,2,3,4,1,2,3,4,1,2,2,2,3,1];
+julia> y_pred = [ 1, 4, 4, 1, 2, 3, 1, 3, 2, 1, 2, 2, 2, 1, 4, 4, 2, 1, 3, 2, 2, 3, 2, 1, 2, 3, 4, 1, 2, 1];
 
-julia> y_true = [1,2,1,1,4,2,4,2,2,4,1,2,3,2,1,2,2,2,1,1];
+julia> y_true = [ 4, 4, 1, 4, 4, 2, 1, 1, 2, 4, 1, 3, 3, 3, 1, 1, 3, 1, 4, 4, 3, 3, 3, 1, 4, 1, 2, 3, 2, 2];
 
-julia> x = confusion_matrix(y_pred, y_true, labels = [1,2,3,4]);
-┌ Warning: There are elements of value 0 in the false positives array. This may lead to false values for some functions
-└ @ Path
-┌ Warning: There are elements of value 0 in the false negatives array. This may lead to false values for some functions
-└ @ Path
+julia> x = confusion_matrix(y_true, y_pred, labels = [1,2,3,4]);
 
 julia> condition_negative(x)
 4-element Array{Int64,1}:
- 14
- 13
- 16
- 17
+ 21
+ 25
+ 22
+ 22
 
 ```
 
 Second example value of a specific class:\n\n
 
 ```julia-repl
-julia> y_pred = [1,2,3,1,4,2,1,2,3,4,1,2,3,4,1,2,2,2,3,1];
+julia> y_pred = [ 1, 4, 4, 1, 2, 3, 1, 3, 2, 1, 2, 2, 2, 1, 4, 4, 2, 1, 3, 2, 2, 3, 2, 1, 2, 3, 4, 1, 2, 1];
 
-julia> y_true = [1,2,1,1,4,2,4,2,2,4,1,2,3,2,1,2,2,2,1,1];
+julia> y_true = [ 4, 4, 1, 4, 4, 2, 1, 1, 2, 4, 1, 3, 3, 3, 1, 1, 3, 1, 4, 4, 3, 3, 3, 1, 4, 1, 2, 3, 2, 2];
 
-julia> x = confusion_matrix(y_pred, y_true, labels = [1,2,3,4]);
-┌ Warning: There are elements of value 0 in the false positives array. This may lead to false values for some functions
-└ @ Path
-┌ Warning: There are elements of value 0 in the false negatives array. This may lead to false values for some functions
-└ @ Path
+julia> x = confusion_matrix(y_true, y_pred, labels = [1,2,3,4]);
 
 julia> condition_negative(x, class_name = 3)
-16
+22
 
 ```
 
@@ -404,7 +437,8 @@ condition_negative(expected, predicted; ith_class = nothing, class_name = nothin
 condition_negative(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
 
 """
-```predicted_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing)```
+```predicted_positive(c::confusion_matrix; keywords)```
+```predicted_positive(y_true, y_pred; keywords)```
 
 Return predicted positive values of either the whole confusion matrix or the classes specified by `class_name` or `ith_class`
 arguments.
@@ -420,6 +454,28 @@ Return the results for the ith class in the ith label of the label list of the g
 Return the results for the class of the speicifed value in the ith label of the label list of the given confusion matrix object.
 
 If both `class_name` and `ith_class` arguments are equal to `nothing`, return predicted positive values for all the elements in the labels arrays
+
+**`average`** : String, default = "binary"
+    "binary" :
+        Return the classwise values.
+
+    "macro" :
+        Return the macro average (mean) of the classwise values.
+
+    "micro" :
+        Return micro average (sum of the numerator divided by sum of the denominator instead of elementwise division) of the classwise values
+
+    "weighted" :
+        Return the weighted average (weighted mean with true positives per class) of the classwise values.
+
+    "sample-weights" :
+        Return the weighted average (weighted mean with given weights per class) of the classwise values.
+
+**`weights`** : Array, default = nothing
+    Use the given weights whilst calculating 'sample_weights' option. If average is not 'sample-weigts' this will be ignored.
+
+**`normalize`** : Bool, default = false
+    If true, normalize the result.
 
 ## Example
 

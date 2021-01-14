@@ -53,7 +53,7 @@ function getindex(s::T, key) where T <: metricTracker
     return s.eval_dict[key]
 end
 
-ClassificationReport(; normalize =false, name = "classification-report", num = 0) = ClassificationReport(normalize, num, name, Dict())
+ClassificationReport(; normalize =false, name = "classification-report ", num = 0) = ClassificationReport(normalize, num, name, Dict())
 function (s::ClassificationReport)(x::confusion_matrix; name = nothing, num = nothing)
     s.num += 1
     s.eval_dict[(name == nothing ? s.name : name) * string(num == nothing ? s.num : num)] = classification_report(x, normalize = s.normalize, return_dict = true)
@@ -67,7 +67,7 @@ mutable struct CohenKappaScore <: metricTracker
     eval_dict
 end
 
-CohenKappaScore(;num = 0, name = "cohen-kappa-score", weights = nothing) = CohenKappaScore(weights,num,name, Dict())
+CohenKappaScore(;num = 0, name = "cohen-kappa-score ", weights = nothing) = CohenKappaScore(weights,num,name, Dict())
 function (s::CohenKappaScore)(x::confusion_matrix; name = nothing, num = nothing)
     s.num += 1
     s.eval_dict[(name == nothing ? s.name : name) * string(num == nothing ? s.num : num)] = cohen_kappa_score(confusion_matrix(y_true, y_pred), s.weights)
@@ -80,7 +80,7 @@ mutable struct HammingLoss <: metricTracker
     eval_dict
 end
 
-HammingLoss(;name = "hamming-loss", num = 0) = HammingLoss(num, name, Dict())
+HammingLoss(;name = "hamming-loss ", num = 0) = HammingLoss(num, name, Dict())
 function (s::HammingLoss)(x::confusion_matrix; name = nothing, num = nothing)
     s.num += 1
     s.eval_dict[(name == nothing ? s.name : name) * string(num == nothing ? s.num : num)] = hamming_loss(x)
@@ -98,7 +98,7 @@ mutable struct ConfusionMatrix <: metricTracker
     eval_dict
 end
 
-ConfusionMatrix(;num = 0, name = "confusion-matrix", labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn", type = num) =
+ConfusionMatrix(;num = 0, name = "confusion-matrix ", labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn", type = Number) =
 ConfusionMatrix(labels, normalize, sample_weight, zero_division, type, num, name, Dict{String, confusion_matrix}())
 function (s::ConfusionMatrix)(y_true, y_pred; name = nothing, num = nothing)
     s.num += 1
@@ -203,7 +203,7 @@ end
 
 BalancedAccuracyScore(;average = "binary", ith_class = nothing, class_name = nothing, weights = nothing, normalize = false, name = "balanced-accuracy-score ", num = 0) =
 BalancedAccuracyScore(ith_class, class_name, average, weights, normalize, num, name, Dict())
-function (s::AccuracyScore)(x::confusion_matrix; name = nothing, num = nothing)
+function (s::BalancedAccuracyScore)(x::confusion_matrix; name = nothing, num = nothing)
     s.num += 1
     s.eval_dict[(name == nothing ? s.name : name) * string(num == nothing ? s.num : num)] = balanced_accuracy_score(x, ith_class = s.ith_class, class_name = s.class_name, average = s.average, weights = s.weights, normalize = s.normalize)
 end
@@ -259,9 +259,9 @@ end
 
 PrevalenceThreshold(;average = "binary", ith_class = nothing, class_name = nothing, weights = nothing, normalize = false, name = "prevalence-threshold ", num = 0) =
 PrevalenceThreshold(ith_class, class_name, average, weights, normalize, num, name, Dict())
-function (s::F1Score)(x::confusion_matrix; name = nothing, num = nothing)
+function (s::PrevalenceThreshold)(x::confusion_matrix; name = nothing, num = nothing)
     s.num += 1
-    eval_dict[(name == nothing ? s.name : name) * string(num == nothing ? s.num : num)] = prevalence_threshold(x, ith_class = s.ith_class, class_name = s.class_name, average = s.average, weights = s.weights, normalize = s.normalize)
+    s.eval_dict[(name == nothing ? s.name : name) * string(num == nothing ? s.num : num)] = prevalence_threshold(x, ith_class = s.ith_class, class_name = s.class_name, average = s.average, weights = s.weights, normalize = s.normalize)
 end
 (s::PrevalenceThreshold)(y_true, y_pred; name = nothing, num = nothing) = s(confusion_matrix(y_true, y_pred), name = name, num = num)
 
@@ -298,7 +298,7 @@ end
 (s::Informedness)(y_true, y_pred; name = nothing, num = nothing) = s(confusion_matrix(y_true, y_pred), name = name, num = num)
 
 Markedness(;average = "binary", ith_class = nothing, class_name = nothing, weights = nothing, normalize = false, name = "markedness " , num = 0) =
-Markednes(ith_class, class_name, average, weights, normalize, num, name, Dict())
+Markedness(ith_class, class_name, average, weights, normalize, num, name, Dict())
 function (s::Markedness)(x::confusion_matrix; name = nothing, num = nothing)
     s.num += 1
     s.eval_dict[(name == nothing ? s.name : name) * string(num == nothing ? s.num : num)] = markedness(x, ith_class = s.ith_class, class_name = s.class_name, average = s.average, weights = s.weights, normalize = s.normalize)
