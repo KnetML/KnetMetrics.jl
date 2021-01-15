@@ -77,26 +77,25 @@ end
 """
 ## Constructors
 
-```confusion_matrix(expected::Array{T,1}, predicted::Array{T,1}; <keyword arguments>) where T <: Union{Int, String}```
+```confusion_matrix(expected, predicted; keywords)```
 
 Return a confusion matrix object constructed by the expected and predicted arrays. Expected and predicted arrays
 must be of size (n,1) or or vector type. Lengths of the expected and predicted arrays must be equal; thus,
 there should be a prediction and a ground truth for each classification.
 
+## Arguments
+- `expected::Vector` : Ground truth values for the classification
+
+- `predicted::Vector` : Predictions of the classifier
+
 ## Keywords
 
-    \n**`labels`** : vector-like of shape (n,1), default = nothing
-    \nList of labels to index the matrix. If nothing is given, those that appear at least once
-        in expected or predicted are used in sorted order.
+- `labels::Vector = nothing` : List of labels to index the matrix. If nothing is given, those that appear at least in expected or predicted are used in sorted order.
+- `normalize::Bool = nothing` : Determines whether or not the confusion matrix (matrix field of the produced confusion matrix) will be normalized.
+- `sample_weight::Number = nothing` : Sample weights which will be filled in the matrix before confusion params function is called
+- `zero_division::String = "warn"` : "warn", "0", "1", default = "warn"
 
-    \n**`normalize`** : boolean, default = nothing
-    \nDetermines whether or not the confusion matrix (matrix field of the produced confusion matrix) will be normalized.
-
-    \n**`sample_weight`** : Number, default = nothing
-    \nSample weights which will be filled in the matrix before confusion params function is called
-
-    \n**`zero_division`** : "warn", "0", "1", default = "warn"
-    \n_See:_ confusion matrix fields
+See: `confusion_matrix`
 
 ## Example
 \n
@@ -124,7 +123,7 @@ julia> x = confusion_matrix(y_true, y_pred, labels = ["emirhan", "knet", "confus
 
 Expected
 
-emirhan           knet      confusion        metrics
+emirhan      knet      confusion        metrics
 ____________________________________________________________
 1              1              0              0   │emirhan
 0              2              0              0   │knet
@@ -138,7 +137,7 @@ ____________________________________________________________
            (Note: Wikipedia and other references may use a different
            convention for axes)
 
-_See: confusion params function_ \n
+See: `confusion_params`  \n
 """
 function confusion_matrix(expected, predicted; labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn", type = Number)
     expected = expected isa Array ? expected : Array(expected)
@@ -194,10 +193,8 @@ confusion_params(c::confusion_matrix) = c.true_positives, c.true_negatives, c.fa
 
 ## Keywords
 
-**`ith_class`** : Int, default = nothing
-\n\tReturn the binary confusion matrix of the ith class in the Labels array. This will be ignored if class_name is not `nothing`
-**`class_name`** : Int, String, default = nothing
-\n\tReturn the binary confusion matrix of the class of given value if exists in the Labels array.
+- `ith_class::Int = nothing` : Return the binary confusion matrix of the ith class in the Labels array. This will be ignored if class_name is not `nothing`
+- `class_name::Int = nothing` : Return the binary confusion matrix of the class of given value if exists in the Labels array.
 
 ## Example
 \n
@@ -206,9 +203,7 @@ julia> y_true = [1,1,1,2,3,3,1,2,1,1,2,1];
 
 julia> y_pred = [1,3,2,1,2,3,1,1,2,3,2,1];
 
-julia> x = confusion_matrix(y_true, y_pred)
-\n┌ Warning: No labels provided, constructing a label set by union of the unique elements in Expected
-and Predicted arrays
+julia> x = confusion_matrix(y_true, y_pred);
 
 julia> class_confusion(x, ith_class = 2)
 2×2 Array{Int64,2}:

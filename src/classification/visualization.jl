@@ -46,7 +46,7 @@ end
 Visualize the given properties of the confusion matrix as specified
 
 ## Keywords
-**`mode`** : String, Array of String; represents properties given below of the confusion matrix, can be either an array containing different properties
+- `mode` : String, Array of String; represents properties given below of the confusion matrix, can be either an array containing different properties
 or a single string.\n
     Supported Modes: \n
     - `matrix`\n
@@ -79,7 +79,7 @@ or a single string.\n
     - `hamming-loss`\n
     - `jaccard-score`\n
 
-**`seriestype`** : String, denotes which visualization function will be used; default: heatmap
+- `seriestype::String = "heatmap"` :
     Supported visualization functions:
         - `heatmap`
         - `bar`
@@ -87,9 +87,9 @@ or a single string.\n
         - `scatter`
         - `line`
 
-**`title`** : String, denotes the title that will displayed above the drawn plot, default: nothing
+`title::String` : Denotes the title that will displayed above the drawn plot, default: nothing
 
-**`labels`** : Vector, denotes the labels that will be used for the plot. If equals to nothing, labels of the given confusion matrix will be used.
+`labels::Vector` : Denotes the labels that will be used for the plot. If equals to nothing, labels of the given confusion matrix will be used.
 
 """
 function visualize(c::confusion_matrix; mode = "matrix", seriestype::String = "heatmap", title= nothing, labels = nothing)
