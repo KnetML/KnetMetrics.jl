@@ -26,40 +26,6 @@ function confusion_params(matrix::Array{Number,2})
     return tp, tn, fp, fn
 end
 
-function check_index(x, none_accepted; class_name = nothing, ith_class = nothing)
-    if !none_accepted; @assert class_name != nothing || ith_class != nothing "No class name or class indexing value provided"; end
-    if none_accepted && class_name == nothing == ith_class
-        return -1
-    elseif class_name != nothing
-        @assert class_name in x "There is no such class in the labels of the given confusion matrix"
-        index = findfirst(x -> x == class_name, x)
-        return index
-    else
-        @assert ith_class >= 0 && ith_class <= length(x) "ith_class value is not in range"
-        return ith_class
-    end
-end
-
-function clear_output(x, zero_division)
-    if true in [isnan(i) for i in x]
-        if zero_division == "warn" || zero_division == "0"
-            if zero_division == "warn"; @warn "Zero division, replacing NaN with 0"; end;
-            if length(x) > 1
-                return replace(x, NaN => 0)
-            else
-                return 0
-            end
-        else
-            if length(x) > 1
-                return replace(x, NaN => 1)
-            else
-                return 1
-            end
-        end
-    else return x
-    end
-end
-
 """
 A struct for representing confusion matrix and related computations
 
@@ -111,26 +77,25 @@ end
 """
 ## Constructors
 
-```confusion_matrix(expected::Array{T,1}, predicted::Array{T,1}; <keyword arguments>) where T <: Union{Int, String}```
+```confusion_matrix(expected, predicted; keywords)```
 
 Return a confusion matrix object constructed by the expected and predicted arrays. Expected and predicted arrays
 must be of size (n,1) or or vector type. Lengths of the expected and predicted arrays must be equal; thus,
 there should be a prediction and a ground truth for each classification.
 
+## Arguments
+- `expected::Vector` : Ground truth values for the classification
+
+- `predicted::Vector` : Predictions of the classifier
+
 ## Keywords
 
-    \n**`labels`** : vector-like of shape (n,1), default = nothing
-    \nList of labels to index the matrix. If nothing is given, those that appear at least once
-        in expected or predicted are used in sorted order.
+- `labels::Vector = nothing` : List of labels to index the matrix. If nothing is given, those that appear at least in expected or predicted are used in sorted order.
+- `normalize::Bool = nothing` : Determines whether or not the confusion matrix (matrix field of the produced confusion matrix) will be normalized.
+- `sample_weight::Number = nothing` : Sample weights which will be filled in the matrix before confusion params function is called
+- `zero_division::String = "warn"` : "warn", "0", "1", default = "warn"
 
-    \n**`normalize`** : boolean, default = nothing
-    \nDetermines whether or not the confusion matrix (matrix field of the produced confusion matrix) will be normalized.
-
-    \n**`sample_weight`** : Number, default = nothing
-    \nSample weights which will be filled in the matrix before confusion params function is called
-
-    \n**`zero_division`** : "warn", "0", "1", default = "warn"
-    \n_See:_ confusion matrix fields
+See: `confusion_matrix`
 
 ## Example
 \n
@@ -158,7 +123,7 @@ julia> x = confusion_matrix(y_true, y_pred, labels = ["emirhan", "knet", "confus
 
 Expected
 
-emirhan           knet      confusion        metrics
+emirhan      knet      confusion        metrics
 ____________________________________________________________
 1              1              0              0   │emirhan
 0              2              0              0   │knet
@@ -172,29 +137,30 @@ ____________________________________________________________
            (Note: Wikipedia and other references may use a different
            convention for axes)
 
-_See: confusion params function_ \n
+See: `confusion_params`  \n
 """
-function confusion_matrix(expected::Array{T,1}, predicted::Array{T,1}; labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn") where T <: Union{Int, String}
+function confusion_matrix(expected, predicted; labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn", type = Number)
+    expected = expected isa Array ? expected : Array(expected)
+    predicted = predicted isa Array ? predicted : Array(predicted)
     @assert length(expected) == length(predicted) "Sizes of the expected and predicted values do not match"
     @assert eltype(expected) <: Union{Int, String} &&  eltype(predicted) <: Union{Int, String} "Expected and Predicted arrays must either be integers or strings"
     @assert eltype(expected) == eltype(predicted) "Element types of Expected and Predicted arrays do not match"
+
     if labels != nothing; @assert length(labels) != 0 "Labels array must contain at least one value"; end;
     @assert zero_division in ["warn", "0", "1"] "Unknown zero division behaviour specification"
     if labels == nothing
-        @warn "No labels provided, constructing a label set by union of the unique elements in Expected and Predicted arrays"
+        @info "No labels provided, constructing a label set by union of the unique elements in Expected and Predicted arrays"
         labels = union(unique(expected),unique(predicted))
         if eltype(labels) == Int
             sort!(labels)
         end
     end
-    dictionary = Dict()
-    for i in 1:length(labels)
+    dictionary = Dict{eltype(labels),Int}()
+    for i in 1:length(labels)  #faster than passing a generator or array of pairs into dict?
         dictionary[labels[i]] = i
     end
-    matrix = zeros(Number, length(labels), length(labels))
-    if sample_weight != 0
-        fill!(matrix, sample_weight)
-    end
+    matrix = Array{type, 2}(undef, length(labels), length(labels))
+    fill!(matrix, type(sample_weight))
     @inbounds for i in 1:length(expected)
        matrix[dictionary[expected[i]],dictionary[predicted[i]]] += 1
     end
@@ -217,6 +183,9 @@ function confusion_matrix(expected::Array{T,1}, predicted::Array{T,1}; labels = 
     return confusion_matrix(tp,tn,fp,fn,matrix,labels, zero_division)
 end
 
+confusion_params(c::confusion_matrix) = c.true_positives, c.true_negatives, c.false_positives, c.false_negatives
+
+
 """
 ```class_confusion(c::confusion_matrix; class_name = nothing, ith_class = nothing)```
 
@@ -224,10 +193,8 @@ end
 
 ## Keywords
 
-**`ith_class`** : Int, default = nothing
-\n\tReturn the binary confusion matrix of the ith class in the Labels array. This will be ignored if class_name is not `nothing`
-**`class_name`** : Int, String, default = nothing
-\n\tReturn the binary confusion matrix of the class of given value if exists in the Labels array.
+- `ith_class::Int = nothing` : Return the binary confusion matrix of the ith class in the Labels array. This will be ignored if class_name is not `nothing`
+- `class_name::Int = nothing` : Return the binary confusion matrix of the class of given value if exists in the Labels array.
 
 ## Example
 \n
@@ -236,9 +203,7 @@ julia> y_true = [1,1,1,2,3,3,1,2,1,1,2,1];
 
 julia> y_pred = [1,3,2,1,2,3,1,1,2,3,2,1];
 
-julia> x = confusion_matrix(y_true, y_pred)
-\n┌ Warning: No labels provided, constructing a label set by union of the unique elements in Expected
-and Predicted arrays
+julia> x = confusion_matrix(y_true, y_pred);
 
 julia> class_confusion(x, ith_class = 2)
 2×2 Array{Int64,2}:
