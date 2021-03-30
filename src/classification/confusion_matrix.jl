@@ -3,6 +3,7 @@ export confusion_params, confusion_matrix, class_confusion
 #Confusion matrix related classes
 
 using LinearAlgebra
+using ..utils: convert_1d
 
 """
     confusion_params(matrix::Array{Number,2})

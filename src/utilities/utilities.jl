@@ -1,8 +1,16 @@
+module utils
+
 using LinearAlgebra
+using Statistics: mean
+export check_index,clear_output,_average_helper,convert2array,convert_1d,_check_curve,_calculate_for_curves, _calculate_for_curves_with_matrices, _trapz, _validate_distance_input
+
+global CONVERT_ARRAY_TYPE = true
+global ARRAY_TYPE = AbstractArray
+global SUPRESS_WARNINGS = false
 
 function check_index(x, none_accepted; class_name = nothing, ith_class = nothing, valid_modes = nothing, average = "macro")
-    @assert average in valid_modes "Unknown averaging mode. This function only supports the following types: " * join(valid_modes, ", ")
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
+        @assert average in valid_modes "Unknown averaging mode. This function only supports the following types: " * join(valid_modes, ", ")
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
 
     if !none_accepted; @assert class_name != nothing || ith_class != nothing "No class name or class indexing value provided"; end
@@ -105,4 +113,6 @@ _trapz(y,x, dx = 1.0) = sum(diff(x) .* (y[1:end-1] .+ y[2:end] ) / 2.0 )
 function _validate_distance_input(u,v,w; p = nothing, p_is_used = false, check_weight_length=false)
     if p_is_used; @assert p >= 1 "'p' value must be greater than or equal to one"; end
     check_weight_length && w != nothing && @assert length(w) == length(u) == length(v) "Given 'w' values must be of same size with distance vectors"
+end
+
 end

@@ -72,7 +72,7 @@ ratio_at_threshold(r::PrecisionRecallCurve, threshold) =  r.ratios[findfirst(x -
 precision_at_threshold(r::PrecisionRecallCurve, threshold) = ratio_at_threshold(r, threshold)[1]
 recall_at_threshold(r::PrecisionRecallCurve, threshold) = ratio_at_threshold(r, threshold)[2]
 
-function Base.show(io::IO, ::MIME"text/plain", r::RocCurve)
+function Base.show(io::IO, ::MIME"text/plain", r::PrecisionRecallCurve)
     println(io,"Precision Recall Curve:")
     println(io, repeat("=", 60))
     for i in 1:length(r.thresholds)
@@ -84,4 +84,4 @@ end
 ##
 
 #TODO
-# roc_auc_score and other metrics 
+# roc_auc_score and other metrics
