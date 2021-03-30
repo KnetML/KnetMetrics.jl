@@ -2,53 +2,6 @@ export classification_report, condition_positive, condition_negative, predicted_
 
 using Statistics: mean
 
-function check_index(x, none_accepted; class_name = nothing, ith_class = nothing)
-    if !none_accepted; @assert class_name != nothing || ith_class != nothing "No class name or class indexing value provided"; end
-    if none_accepted && class_name == nothing == ith_class
-        return -1
-    elseif class_name != nothing
-        @assert class_name in x "There is no such class in the labels of the given confusion matrix"
-        index = findfirst(x -> x == class_name, x)
-        return index
-    else
-        @assert ith_class >= 0 && ith_class <= length(x) "ith_class value is not in range"
-        return ith_class
-    end
-end
-
-function clear_output(x, zero_division)
-    if true in [isnan(i) || isinf(i) for i in x]
-        if zero_division == "warn" || zero_division == "0"
-            if zero_division == "warn"; @warn "Zero division, replacing NaN or Inf with 0"; end;
-            if length(x) > 1
-                return replace(x, NaN => 0)
-            else
-                return 0
-            end
-        else
-            if length(x) > 1
-                return replace(x, NaN => 1)
-            else
-                return 1
-            end
-        end
-    else return x
-    end
-end
-
-function _average_helper(numerator, denominator, weights, average, zero_division, normalize)
-    if average == "macro"
-        x = clear_output(denominator == nothing ? mean(numerator) : mean(numerator ./ denominator), zero_division)
-    elseif average == "micro"
-        x = clear_output(denominator == nothing ? sum(numerator) : sum(numerator) / sum(denominator) , zero_division)
-    elseif average == "weighted" || average == "sample-weights"
-        x = clear_output(denominator == nothing ? (sum(numerator .* weights) / sum(weights)) : (sum((numerator ./ denominator) .* weights) / sum(weights)), zero_division)
-    else
-        x = clear_output(denominator == nothing ? numerator : numerator ./ denominator, zero_division)
-    end
-    return normalize && length(x) > 1 ? LinearAlgebra.normalize(x) : x
-end
-
 """
 ```classification_report(c::confusion_matrix; keywords)```
 ```classification_report(y_true, y_pred; keywords)```
@@ -325,10 +278,7 @@ See also : [`confusion_matrix`](@ref), [`condition_negative`](@ref), [`predicted
 
 """
 function condition_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = c.true_positives + c.false_negatives
     else
@@ -415,10 +365,7 @@ See also : [`confusion_matrix`](@ref), [`condition_positive`](@ref), [`predicted
 
 """
 function condition_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = c.true_negatives .+ c.false_positives
     else
@@ -508,11 +455,7 @@ See also : [`confusion_matrix`](@ref), [`condition_negative`](@ref), [`predicted
 
 """
 function predicted_positive(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = c.true_positives .+ c.false_positives
     else
@@ -599,11 +542,7 @@ See also : [`confusion_matrix`](@ref), [`condition_negative`](@ref), [`predicted
 
 """
 function predicted_negative(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = c.true_negatives .+ c.false_negatives
     else
@@ -698,11 +637,7 @@ See also : [`confusion_matrix]`(@ref), [`predicted_negative`](@ref), [`predicted
 
 """
 function correctly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = c.true_positives .+ c.true_negatives
     else
@@ -796,11 +731,7 @@ See also : [`confusion_matrix`](@ref), [`predicted_negative`](@ref), [`predicted
 
 """
 function incorrectly_classified(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "binary", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = c.false_positives .+ c.false_negatives
     else
@@ -887,12 +818,10 @@ true
 
 See also : [`confusion_matrix`](@ref) , [`recall_score`](@ref) ,  [`balanced_accuracy_score`](@ref), [`specificity_score`](@ref)
 """
-function sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing , average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
+true_positive_rate, sensitivity_score
 
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+function sensitivity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing , average = "macro", weights = nothing, normalize = false)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = c.true_positives
         denominator = condition_positive(c)
@@ -906,6 +835,9 @@ end
 
 sensitivity_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "macro", normalize = false)  =
 sensitivity_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
+
+true_positive_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing , average = "macro", weights = nothing, normalize = false) = sensitivity_score(c; ith_class = ith_class, class_name = class_name , average = average, weights = weights, normalize = normalize)
+true_positive_rate(expected, predicted; ith_class = nothing, class_name = nothing , average = "macro", weights = nothing, normalize = false) = sensitivity_score(confusion_matrix(expected,predicted); ith_class = ith_class, class_name = class_name , average = average, weights = weights, normalize = normalize)
 
 """
 ```recall_score(c::confusion_matrix; keywords)```
@@ -1062,11 +994,7 @@ See also : [`confusion_matrix`](@ref), [`sensitivity_score`](@ref), [`balanced_a
 
 """
 function specificity_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = c.true_negatives
         denominator = condition_negative(c)
@@ -1151,11 +1079,7 @@ See Also : [`confusion_matrix`](@ref), [`sensitivity_score`](@ref) , [`balanced_
 
 """
 function precision_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = c.true_positives
         denominator = c.true_positives .+ c.false_positives
@@ -1320,11 +1244,7 @@ See Also : [`jaccard_score`](@ref), [`confusion_matrix`](@ref), [`hamming_loss`]
 
 """
 function accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", normalize = true, weights = nothing)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = (c.true_positives)
         denominator = (c.true_positives .+ c.false_positives)
@@ -1414,12 +1334,7 @@ See Also : [`accuracy_score`](@ref) , [`confusion_matrix`](@ref) , [`hamming_los
 
 """
 function balanced_accuracy_score(c::confusion_matrix; ith_class = nothing, class_name = nothing , average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = sensitivity_score(c, average = "binary") .+ recall_score(c, average = "binary")
         denominator = 2
@@ -1509,11 +1424,7 @@ See Also :   [`confusion_matrix`](@ref), [`accuracy_score`](@ref), [`positive_pr
 
 """
 function negative_predictive_value(c::confusion_matrix; ith_class = nothing, class_name = nothing , average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = c.true_negatives
         denominator = c.true_negatives .+ c.false_negatives
@@ -1604,11 +1515,7 @@ julia> false_negative_rate(x, ith_class = 2)
 
 """
 function false_negative_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = c.false_negatives
         denominator = condition_positive(c)
@@ -1698,11 +1605,7 @@ See Also :   [`confusion_matrix`](@ref), [`false_negative_rate`](@ref), [`positi
 
 """
 function false_positive_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = c.false_positives
         denominator =  condition_negative(c)
@@ -1795,11 +1698,7 @@ See Also :   [`confusion_matrix`](@ref), [`accuracy_score`](@ref),  [`positive_p
 
 """
 function false_discovery_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = c.false_positives
         denominator = c.false_positives .+ c.true_negatives
@@ -1889,11 +1788,7 @@ true
 See Also :   [`confusion_matrix`](@ref), [`accuracy_score`](@ref), [`positive_predictive_value`], [`false_discovery_rate`](@ref)
 """
 function false_omission_rate(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = 1 .- negative_predictive_value(c, average = "binary")
     else
@@ -1905,6 +1800,29 @@ end
 
 false_omission_rate(expected, predicted; ith_class = nothing, class_name = nothing, average = "macro", normalize = false) =
 false_omission_rate(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize)
+
+
+function fbeta_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false, beta=1)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
+    if index == -1
+        p = precision_score(c, average="binary")
+        r = recall_score(c, average="binary")
+        numerator = (1 + beta.*beta) .* p .* r
+        denominator = (beta.*beta) .* p .+ r
+    else
+        p = precision_score(c, ith_class=index)
+        r = recall_score(c, ith_class=index)
+        numerator = (1 + beta*beta) .* p .* r
+        denominator = (beta*beta) .* p .+ r
+    end
+
+    if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
+    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
+end
+
+fbeta_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false, beta=1) =
+    fbeta_score(confusion_matrix(expected,predicted), ith_class = ith_class, class_name = class_name, average = average, normalize = normalize, beta=beta)
+
 
 """
 ```f1_score(c::confusion_matrix; keywords) ```
@@ -1981,21 +1899,7 @@ See Also :   [`confusion_matrix`](@ref), [`accuracy_score`](@ref), [`recall_scor
 
 """
 function f1_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
-    if index == -1
-        numerator = 2 .* c.true_positives
-        denominator = 2 .* c.true_positives .+ c.false_positives .+ c.false_negatives
-    else
-        numerator = 2 * c.true_positives[index]
-        denominator = 2 * c.true_positives[index] + c.false_positives[index] + c.false_negatives[index]
-    end
-
-    if average == "weighted"; weights = c.true_positives .+ c.false_negatives ; end
-    return _average_helper(numerator, denominator, weights, average, c.zero_division, normalize)
+    return fbeta_score(c, ith_class = ith_class, class_name = class_name, average = average, weights = weights, normalize = normalize, beta = 1)
 end
 
 f1_score(expected, predicted; ith_class = nothing, class_name = nothing, average = "macro", normalize = false)  =
@@ -2079,10 +1983,7 @@ See Also :  [ `confusion_matrix`](@ref),[ `accuracy_score`](@ref), [`recall_scor
 
 """
 function prevalence_threshold(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = sqrt.(sensitivity_score(c, average = "binary") .* (-specificity_score(c, average = "binary") .+ 1 )) .+ specificity_score(c, average = "binary") .- 1
         denominator = sensitivity_score(c, average = "binary") .+ specificity_score(c, average = "binary") .- 1
@@ -2172,11 +2073,7 @@ See Also :   [`confusion_matrix`](@ref), [`accuracy_score`](@ref), [`recall_scor
 
 """
 function threat_score(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = c.true_positives
         denominator = c.true_positives .+ c.false_negatives .+ c.false_positives
@@ -2266,11 +2163,7 @@ See Also :   [`confusion_matrix`](@ref), [`accuracy_score`](@ref), [`threat_scor
 
 """
 function matthews_correlation_coeff(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = sqrt.( precision_score(c, average = "binary") .* sensitivity_score(c, average = "binary") .* specificity_score(c, average = "binary") .* negative_predictive_value(c, average = "binary")) .- sqrt.(false_discovery_rate(c, average = "binary") .* false_negative_rate(c, average = "binary") .* false_positive_rate(c, average = "binary") .*
         false_omission_rate(c, average = "binary"))
@@ -2361,11 +2254,7 @@ true
 See Also :   [`confusion_matrix`](@ref), [`matthews_correlation_coeff`](@ref), [`threat_score`](@ref), [`f1_score`](@ref)
 """
 function fowlkes_mallows_index(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = sqrt.(precision_score(c, average = "binary") .+ sensitivity_score(c, average = "binary"))
     else
@@ -2453,12 +2342,7 @@ true
 See Also :   [`confusion_matrix`](@ref), [`matthews_correlation_coeff`](@ref), [`markedness`](@ref), [`f1_score`](@ref)
 """
 function informedness(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
-
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = specificity_score(c, average = "binary") .+ sensitivity_score(c, average = "binary") .- 1
     else
@@ -2546,11 +2430,7 @@ See Also :   [`confusion_matrix`](@ref), [`matthews_correlation_coeff`](@ref), [
 
 """
 function markedness(c::confusion_matrix; ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         x = precision_score(c, average = "binary") .+ negative_predictive_value(c, average = "binary") .- 1
     else
@@ -2736,10 +2616,7 @@ See Also :   [`confusion_matrix`](@ref), [`accuracy_score`](@ref), [`hamming_los
 
 """
 function jaccard_score(c::confusion_matrix;  ith_class = nothing, class_name = nothing, average = "macro", weights = nothing, normalize = false)
-    @assert average in ["binary", "macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: binary, macro, weighted, sample-weights"
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
-    If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-    index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name)
+        index = check_index(c.Labels, true, ith_class = ith_class, class_name = class_name, valid_modes = ["binary", "macro", "weighted", "micro", "sample-weights"], average = average)
     if index == -1
         numerator = c.true_positives
         denominator =  c.true_positives .+ c.false_negatives .+ c.false_positives
