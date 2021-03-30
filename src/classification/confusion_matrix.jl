@@ -63,7 +63,6 @@ from which true positives, true negatives, false positives and false negatives a
 
 
 """
-
 struct confusion_matrix
     true_positives::Array{Int}
     true_negatives::Array{Int}
@@ -139,9 +138,9 @@ ____________________________________________________________
 
 See: `confusion_params`  \n
 """
-function confusion_matrix(expected, predicted; labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn", type = Number)
-    expected = expected isa Array ? expected : Array(expected)
-    predicted = predicted isa Array ? predicted : Array(predicted)
+function confusion_matrix(expected, predicted; labels = nothing, normalize = false, sample_weight = 0, zero_division = "warn", type = Number, suppresswarning = false)
+    expected = convert_1d(expected)
+    predicted = convert_1d(predicted)
     @assert length(expected) == length(predicted) "Sizes of the expected and predicted values do not match"
     @assert eltype(expected) <: Union{Int, String} &&  eltype(predicted) <: Union{Int, String} "Expected and Predicted arrays must either be integers or strings"
     @assert eltype(expected) == eltype(predicted) "Element types of Expected and Predicted arrays do not match"
@@ -149,7 +148,7 @@ function confusion_matrix(expected, predicted; labels = nothing, normalize = fal
     if labels != nothing; @assert length(labels) != 0 "Labels array must contain at least one value"; end;
     @assert zero_division in ["warn", "0", "1"] "Unknown zero division behaviour specification"
     if labels == nothing
-        @info "No labels provided, constructing a label set by union of the unique elements in Expected and Predicted arrays"
+        if !suppresswarning; @info "No labels provided, constructing a label set by union of the unique elements in Expected and Predicted arrays"; end
         labels = union(unique(expected),unique(predicted))
         if eltype(labels) == Int
             sort!(labels)
@@ -157,25 +156,27 @@ function confusion_matrix(expected, predicted; labels = nothing, normalize = fal
     end
     dictionary = Dict{eltype(labels),Int}()
     for i in 1:length(labels)  #faster than passing a generator or array of pairs into dict?
-        dictionary[labels[i]] = i
+         dictionary[labels[i]] = i
     end
     matrix = Array{type, 2}(undef, length(labels), length(labels))
     fill!(matrix, type(sample_weight))
-    @inbounds for i in 1:length(expected)
-       matrix[dictionary[expected[i]],dictionary[predicted[i]]] += 1
+    for i in 1:length(expected)
+        matrix[dictionary[expected[i]],dictionary[predicted[i]]] += 1
     end
     tp, tn, fp, fn = confusion_params(matrix)
-    if 0 in tp
-        @warn "There are elements of value 0 in the true positives array. This may lead to false values for some functions"
-    end
-    if 0 in tn
-        @warn "There are elements of value 0 in the true negatives array. This may lead to false values for some functions"
-    end
-    if 0 in fp
-       @warn "There are elements of value 0 in the false positives array. This may lead to false values for some functions"
-    end
-    if 0 in fn
-        @warn "There are elements of value 0 in the false negatives array. This may lead to false values for some functions"
+    if !suppresswarning
+        if 0 in tp
+            @warn "There are elements of value 0 in the true positives array. This may lead to false values for some functions"
+        end
+        if 0 in tn
+            @warn "There are elements of value 0 in the true negatives array. This may lead to false values for some functions"
+        end
+        if 0 in fp
+           @warn "There are elements of value 0 in the false positives array. This may lead to false values for some functions"
+        end
+        if 0 in fn
+            @warn "There are elements of value 0 in the false negatives array. This may lead to false values for some functions"
+        end
     end
     if normalize
        matrix = [round(i, digits = 3) for i in LinearAlgebra.normalize(matrix)]

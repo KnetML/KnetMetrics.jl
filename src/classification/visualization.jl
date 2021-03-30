@@ -1,44 +1,21 @@
 #Visualization Functions
+
 export visualize
 
 using Plots
 
 gr()
 
-function _plot(c::confusion_matrix; func, type, title, labels = nothing)
-    x = nothing
-    if type == "condition-positive"; x = func(labels, condition_positive(c, average = "binary") , title = title, labels = permutedims(labels))
-    elseif type == "condition-negative"; x = func(labels, condition_negative(c, average = "binary") , title = title, labels = permutedims(labels))
-    elseif type == "predicted-positive"; x = func(labels, predicted_positive(c, average = "binary") , title = title, labels = permutedims(labels))
-    elseif type == "predicted-negative"; x = func(labels, predicted_positive(c, average = "binary") , title = title, labels = permutedims(labels))
-    elseif type == "correctly-classified"; x = func(labels, correctly_classified(c, average = "binary") , title = title, labels = permutedims(labels))
-    elseif type == "incorrectly-classified"; x = func(labels, incorrectly_classified(c, average = "binary") , title = title, labels = permutedims(labels))
-    elseif type == "sensitivity-score"; x = func(labels, sensitivity_score(c, average = "binary") , title = title, labels = permutedims(labels))
-    elseif type == "recall-score"; x = func(labels, recall_score(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "specificity-score";x =  func(labels, specificity_score(c, average = "binary") ,title = title, labels = permutedims(labels))
-    elseif type == "precision-score";x =  func(labels, precision_score(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "positive-predictive-value"; x = func(labels, positive_predictive_value(c, average = "binary") , title = title, labels = permutedims(labels))
-    elseif type == "accuracy-score"; x = func(labels, accuracy_score(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "balanced-accuracy-score"; x = func(labels, balanced_accuracy_score(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "negative-predictive-value"; x = func(labels, negative_predictive_value(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "false-negative-rate"; x = func(labels, false_negative_rate(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "false-positive-rate"; x = func(labels, false_positive_rate(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "false-discovery-rate"; x = func(labels, false_discovery_rate(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "false-omission-rate"; x = func(labels, false_omission_rate(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "f1-score"; x = func(labels, f1_score(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "prevalence-threshold"; x = func(labels, prevalence_threshold(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "threat-score"; x = func(labels, threat_score(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "matthews-correlation-coeff"; x = func(labels, matthews_correlation_coeff(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "fowlkes-mallows-index"; x = func(labels, fowlkes_mallows_index(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "informedness"; x = func(labels, informedness(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "markedness"; x = func(labels, markedness(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "cohen-kappa-score"; x = func(labels, cohen_kappa_score(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "hamming-loss"; x = func(labels, hamming_loss(c, average = "binary"), title = title, labels = permutedims(labels))
-    elseif type == "jaccard-score"; x = func(labels, jaccard_score(c, average = "binary"), title = title, labels = permutedims(labels))
-    end
-    return x
+macro _call_func_(f,c, kwargs...)
+    z = [esc(a) for a in kwargs]
+    return :((eval($f))($c; $(z...)))
 end
 
+function _plot(c::confusion_matrix; func = nothing, type = nothing, title = "Visualization", labels = nothing)
+    x = @_call_func_ Symbol(type)  c average = "binary"
+    l = Array{typeof(labels[1])}(labels)
+    x = func(l, x, title = title, labels = permutedims(l))
+end
 
 """
 ```visualize(c::confusion_matrix, <keywords>)```
@@ -50,34 +27,34 @@ Visualize the given properties of the confusion matrix as specified
 or a single string.\n
     Supported Modes: \n
     - `matrix`\n
-    - `condition-positive`\n
-    - `condition-negative`\n
-    - `predicted-positive\n
-    - `predicted-negative`\n
-    - `correctly-classified`\n
-    - `incorrectly-classified`\n
-    - `sensitivity-score`\n
-    - `recall-score`\n
-    - `specificity-score`\n
-    - `precision-score`\n
-    - `positive-predictive-value`\n
-    - `accuracy-score`\n
-    - `balanced-accuracy-score`\n
-    - `negative-predictive-value`\n
-    - `false-negative-rate`\n
-    - `false-positive-rate`\n
-    - `false-discovery-rate`\n
-    - `false-omission-rate`\n
-    - `f1-score`\n
-    - `prevalence-threshold`\n
-    - `threat-score`\n
-    - `matthews-correlation-coeff`\n
-    - `fowlkes-mallows-index`\n
+    - `condition_positive`\n
+    - `condition_negative`\n
+    - `predicted_positive\n
+    - `predicted_negative`\n
+    - `correctly_classified`\n
+    - `incorrectly_classified`\n
+    - `sensitivity_score`\n
+    - `recall_score`\n
+    - `specificity_score`\n
+    - `precision_score`\n
+    - `positive_predictive-value`\n
+    - `accuracy_score`\n
+    - `balanced_accuracy-score`\n
+    - `negative_predictive-value`\n
+    - `false_negative_rate`\n
+    - `false_positive_rate`\n
+    - `false_discovery_rate`\n
+    - `false_omission_rate`\n
+    - `f1_score`\n
+    - `prevalence_threshold`\n
+    - `threat_score`\n
+    - `matthews_correlation_coeff`\n
+    - `fowlkes_mallows_index`\n
     - `informedness`\n
     - `markedness`\n
-    - `cohen-kappa-score`\n
-    - `hamming-loss`\n
-    - `jaccard-score`\n
+    - `cohen_kappa_score`\n
+    - `hamming_loss`\n
+    - `jaccard_score`\n
 
 - `seriestype::String = "heatmap"` :
     Supported visualization functions:
@@ -90,7 +67,6 @@ or a single string.\n
 `title::String` : Denotes the title that will displayed above the drawn plot, default: nothing
 
 `labels::Vector` : Denotes the labels that will be used for the plot. If equals to nothing, labels of the given confusion matrix will be used.
-
 """
 function visualize(c::confusion_matrix; mode = "matrix", seriestype::String = "heatmap", title= nothing, labels = nothing)
     @assert seriestype in ["scatter", "heatmap", "line", "histogram", "bar"] "Unknown visualization format"
@@ -100,9 +76,9 @@ function visualize(c::confusion_matrix; mode = "matrix", seriestype::String = "h
     mode = mode isa Array ? mode : [mode]
     plt = []
     for i in 1:length(mode)
-        @assert mode[i] in ["matrix", "condition-positive", "condition-negative", "predicted-positive","predicted-negative", "correctly-classified", "incorrectly-classified", "sensitivity-score", "recall-score", "specificity-score", "precision-score", "positive-predictive-value", "accuracy-score", "balanced-accuracy-score", "negative-predictive-value", "false-negative-rate", "false-positive-rate", "false-discovery-rate",
-         "false-omission-rate", "f1-score", "prevalence-threshold", "threat-score", "matthews-correlation-coeff", "fowlkes-mallows-index",
-         "informedness", "markedness", "cohen-kappa-score", "hamming-loss", "jaccard-score"] "Unknown visualization mode"
+        @assert mode[i] in ["matrix", "condition_positive", "condition_negative", "predicted_positive","predicted_negative", "correctly_classified", "incorrectly_classified", "sensitivity_score", "recall_score", "specificity_score", "precision_score", "positive_predictive_value", "accuracy_score", "balanced_accuracy_score", "negative_predictive_value", "false_negative_rate", "false_positive_rate", "false_discovery_rate",
+         "false_omission_rate", "f1_score", "prevalence_threshold", "threat_score", "matthews_correlation_coeff", "fowlkes_mallows_index",
+         "informedness", "markedness", "cohen_kappa_score", "hamming_loss", "jaccard_score"] "Unknown visualization mode"
         if mode[i] != "matrix"; @assert seriestype in ["scatter", "line", "histogram", "bar"] "The given mode does not support this visualization format"; end
         x = nothing
         if mode[i] == "matrix"
@@ -113,14 +89,18 @@ function visualize(c::confusion_matrix; mode = "matrix", seriestype::String = "h
             elseif seriestype == "heatmap"; x = heatmap(labels, labels, c.matrix, labels = permutedims(labels), title = title[i])
             end
         else
-            if seriestype == "histogram"; x = _plot(c; func = histogram, type = mode[i], title = title[i], labels = labels)
-            elseif seriestype == "scatter"; x = _plot(c; func = scatter, type = mode[i], title = title[i], labels = labels)
-            elseif seriestype == "line"; x =  _plot(c; func = plot, type = mode[i], title = title[i], labels = labels)
-            elseif seriestype == "bar"; x =  _plot(c; func = bar, type = mode[i], title = title[i], labels = labels)
-            elseif seriestype == "heatmap"; x =  _plot(c; func = heatmap, type = mode[i], title = title[i], labels = labels)
+            if seriestype == "histogram"; x = _plot(c; func = histogram, type = Symbol(mode[i]), title = title[i], labels = labels)
+            elseif seriestype == "scatter"; x = _plot(c; func = scatter, type = Symbol(mode[i]), title = title[i], labels = labels)
+            elseif seriestype == "line"; x =  _plot(c; func = plot, type = Symbol(mode[i]), title = title[i], labels = labels)
+            elseif seriestype == "bar"; x =  _plot(c; func = bar, type = Symbol(mode[i]), title = title[i], labels = labels)
+            elseif seriestype == "heatmap"; x =  _plot(c; func = heatmap, type = Symbol(mode[i]), title = title[i], labels = labels)
             end
         end
         push!(plt, x)
     end
     plot(plt..., layout = (length(plt), 1))
 end
+
+
+visualize(r::RocCurve, title = "Roc Curve", marker = (15, 0.2, :orange)) = scatter(r.ratios, annotations = [(r.ratios[i]..., r.thresholds[i]) for i in 1:length(r.ratios)], title = title, marker = marker)
+visualize(r::PrecisionRecallCurve, title = "Precision Recall Curve", marker = (15, 0.2, :orange)) = scatter(r.ratios, annotations = [(r.ratios[i]..., r.thresholds[i]) for i in 1:length(r.ratios)], title = title, marker = marker)
