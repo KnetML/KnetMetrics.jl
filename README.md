@@ -21,26 +21,34 @@ _____________________
 # testing some metrics
 julia> f1_score(c) # f1_score(y_true, y_pred)
 0.32307692307692304
+
 julia> f1_score(c, average = "binary")
 3-element Array{Float64,1}:
  0.2
  0.3076923076923077
  0.4615384615384615
+
 julia> f1_score(c, average = "binary", normalize=true)
 3-element Array{Float64,1}:
  0.33918173268560714
  0.5218180502855494
  0.7827270754283241
+
 julia> f1_score(c, class_name = 3)
 0.4615384615384615
+
 julia> matthews_correlation_coeff(c, average = "micro")
 0.20396752553080869
+
 julia> matthews_correlation_coeff(c, average = "weighted")
 0.07138375997792953
+
 julia> matthews_correlation_coeff(c, average = "sample-weights", weights = [3,2,1])
 0.03263110671272045
+
 julia> minkowski_distance(y_true, y_pred)
 21
+
 julia> mean_absolute_error(y_true, y_pred)
 0.8333333333333334
 ```
