@@ -104,7 +104,7 @@ Note: (*) symbol denotes that the function has a built-in visualization through 
 
 
 ## TO-DO
-1- A greater range of Roc Curve related functions
-2- A greater range of regression functions
-3- A greater range of pairwise functions and kernels
-4- Clustering metrics
+1. A greater range of Roc Curve related functions
+2. A greater range of regression functions
+3. A greater range of pairwise functions and kernels
+4. Clustering metrics
