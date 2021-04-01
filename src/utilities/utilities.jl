@@ -12,7 +12,6 @@ function check_index(x, none_accepted; class_name = nothing, ith_class = nothing
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(x) """If the average mode is weighted, weights that are the same size as the labels must be provided!
         @assert average in valid_modes "Unknown averaging mode. This function only supports the following types: " * join(valid_modes, ", ")
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
-
     if !none_accepted; @assert class_name != nothing || ith_class != nothing "No class name or class indexing value provided"; end
     if none_accepted && class_name == nothing == ith_class
         return -1
@@ -74,10 +73,8 @@ convert_1d(x) = reshape(convert2array(x), (length(x)))
 
 function _check_curve(y_true, thresholding_func = nothing, thresholds = [], first_func = false_positive_rate, second_func = true_positive_rate; ith_class = nothing,
         class_name = nothing, average = "macro", normalize = false, weights = nothing)
-
     thresholding_func == nothing || thresholds == [] ? throw(DomainError("'thresholding_func' cannot be equal to nothing and thresholds must be provided.")) : nothing
     y_true, thresholds = convert_1d(y_true),  convert_1d(thresholds)
-
     @assert average in ["macro", "weighted", "micro", "sample-weights"] "Unknown averaging mode. This function only supports the following types: macro, weighted, sample-weights"
     if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
@@ -85,11 +82,8 @@ end
 
 function _calculate_for_curves(y_true, y_pred, thresholding_func = nothing, thresholds = [], first_func = false_positive_rate, second_func = true_positive_rate; ith_class = nothing,
         class_name = nothing, average = "macro", normalize = false, weights = nothing)
-    print("CALCULATE FOR CURVES : ", thresholding_func, thresholds,"\n\n\n\n\n")
-
     vals = [thresholding_func(y_pred, i) for i in thresholds]
     matrices = [confusion_matrix(y_true, predictions) for predictions in vals]
-
     return _calculate_for_curves_with_matrices(matrices, thresholding_func, thresholds, first_func, second_func; ith_class = ith_class,
             class_name = class_name, average = average, normalize = normalize, weights = weights)
 
@@ -97,18 +91,13 @@ end
 
 function _calculate_for_curves_with_matrices(c, thresholding_func = nothing, thresholds = [], first_func = false_positive_rate, second_func = true_positive_rate; ith_class = nothing,
         class_name = nothing, average = "macro", normalize = false, weights = nothing)
-
     options = (ith_class = ith_class, class_name = class_name, average = average, normalize = normalize, weights = weights)
     ratios = []
-
     ratios = [(first_func(c[i];options...), second_func(c[i];options...)) for i in 1:length(c)]
-    print("OPTIONS : ", options)
     return RocCurve(thresholds, ratios, options)
-
 end
 
 _trapz(y,x, dx = 1.0) = sum(diff(x) .* (y[1:end-1] .+ y[2:end] ) / 2.0 )
-
 
 function _validate_distance_input(u,v,w; p = nothing, p_is_used = false, check_weight_length=false)
     if p_is_used; @assert p >= 1 "'p' value must be greater than or equal to one"; end
