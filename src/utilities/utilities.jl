@@ -8,8 +8,8 @@ global CONVERT_ARRAY_TYPE = true
 global ARRAY_TYPE = AbstractArray
 global SUPRESS_WARNINGS = false
 
-function check_index(x, none_accepted; class_name = nothing, ith_class = nothing, valid_modes = nothing, average = "macro")
-    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(c.Labels) """If the average mode is weighted, weights that are the same size as the labels must be provided!
+function check_index(x, none_accepted; class_name = nothing, ith_class = nothing, valid_modes = nothing, average = "macro", weights=nothing)
+    if average == "sample-weights"; @assert weights != nothing && length(weights) == length(x) """If the average mode is weighted, weights that are the same size as the labels must be provided!
         @assert average in valid_modes "Unknown averaging mode. This function only supports the following types: " * join(valid_modes, ", ")
     If no precalculated weights can be provided but the class imbalance is to be taken into account try ' average = "weighted" ' or  ' average = "micro" ' """; end
 

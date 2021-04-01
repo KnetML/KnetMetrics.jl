@@ -10,6 +10,22 @@ using Statistics: mean
 
 # Distance methods
 
+"""
+```minkowski_distance(u,v; keywords)```
+```minkowski_distance(x::Tuple; keywords)```
+
+Return the Minkowski distance between the given points both of which are given with vector-like structures.
+
+## Arguments
+- `u` : first point
+- `v` : second point
+- `x::Tuple` : tuple as follows: (u,v)
+
+## Keywords
+- `p::Int = 2` : p value
+- `w::Int` : weights that must be of the same length with u,v
+- `rooted = false` : denotes whether or not to execute the final rooting operation
+"""
 function minkowski_distance(u,v; p = 2, w = nothing, rooted = false)
     _validate_distance_input(u, v, w; p = p, p_is_used = true)
     val = abs.(u .- v)
@@ -26,15 +42,72 @@ end
 
 minkowski_distance(x::Tuple; p = 2, w = nothing) = minkowski_distance(x...; p = p, w = w)
 
+"""
+```euclidian_distance(u,v; keywords)```
+```euclidian_distance(x::Tuple; keywords)```
+
+Return the Euclidian distance between the given points both of which are given with vector-like structures.
+
+## Arguments
+- `u` : first point
+- `v` : second point
+- `x::Tuple` : tuple as follows: (u,v)
+
+## Keywords
+- `w::Int` : weights that must be of the same length with u,v
+- `squared = false` : denotes whether or not to execute the final squaring operation
+"""
 euclidian_distance(u,v; w = nothing, squared = false) = minkowski_distance(u,v; w = w, p = 2, rooted = squared)
 euclidian_distance(x::Tuple;w = nothing, squared = false) = euclidian_distance(x...; w = w, rooted = squared)
 
+"""
+```manhattan_distance(u,v; keywords)```
+```manhattan_distance(x::Tuple; keywords)```
+
+Return the Manhattan distance between the given points both of which are given with vector-like structures.
+
+## Arguments
+- `u` : first point
+- `v` : second point
+- `x::Tuple` : tuple as follows: (u,v)
+
+## Keywords
+- `w::Int` : weights that must be of the same length with u,v
+"""
 manhattan_distance(u,v; w = nothing) = minkowski_distance(u,v; w = w, p = 1)
 manhattan_distance(x::Tuple;w = nothing) = manhattan_distance(x...; w = w)
 
+"""
+```chebyshev_distance(u,v; keywords)```
+```chebyshev_distance(x::Tuple; keywords)```
+
+Return the Chebyshev distance between the given points both of which are given with vector-like structures.
+
+## Arguments
+- `u` : first point
+- `v` : second point
+- `x::Tuple` : tuple as follows: (u,v)
+
+## Keywords
+- `w::Int` : weights that must be of the same length with u,v
+"""
 chebyshev_distance(u,v; w = nothing) = minkowski_distance(u,v; w = w, p = Inf, rooted=false)
 chebyshev_distance(x::Tuple;w = nothing) = chebyshev_distance(x...; w = w)
 
+"""
+```braycurtis_distance(u,v; keywords)```
+```braycurtis_distance(x::Tuple; keywords)```
+
+Return the Braycurtis distance between the given points both of which are given with vector-like structures.
+
+## Arguments
+- `u` : first point
+- `v` : second point
+- `x::Tuple` : tuple as follows: (u,v)
+
+## Keywords
+- `w::Int` : weights that must be of the same length with u,v
+"""
 function braycurtis_distance(u,v; w = nothing)
     _validate_distance_input(u, v, w)
     difference = abs.(u .- v)
@@ -48,6 +121,20 @@ end
 
 braycurtis_distance(x::Tuple; w = nothing) = braycurtis_distance(x...; w = w)
 
+"""
+```canberra_distance(u,v; keywords)```
+```canberra_distance(x::Tuple; keywords)```
+
+Return the Canberra distance between the given points both of which are given with vector-like structures.
+
+## Arguments
+- `u` : first point
+- `v` : second point
+- `x::Tuple` : tuple as follows: (u,v)
+
+## Keywords
+- `w::Int` : weights that must be of the same length with u,v
+"""
 function canberra_distance(u,v; w = nothing)
     _validate_distance_input(u, v, w)
     difference = abs.(u .- v)
@@ -59,6 +146,20 @@ function canberra_distance(u,v; w = nothing)
 end
 canberra_distance(x::Tuple; w = nothing) = canberra_distance(x...; w = w)
 
+"""
+```cityblock_distance(u,v; keywords)```
+```cityblock_distance(x::Tuple; keywords)```
+
+Return the Cityblock distance between the given points both of which are given with vector-like structures.
+
+## Arguments
+- `u` : first point
+- `v` : second point
+- `x::Tuple` : tuple as follows: (u,v)
+
+## Keywords
+- `w::Int` : weights that must be of the same length with u,v
+"""
 function cityblock_distance(u,v; w = nothing)
     _validate_distance_input(u,v,w)
     result = abs.(u .- v)
@@ -69,6 +170,19 @@ function cityblock_distance(u,v; w = nothing)
 end
 cityblock_distance(x; w = nothing) = cityblock_distance(x...; w = w)
 
+"""
+```mahalanobis_distance(u,v; keywords)```
+```mahalanobis_distance(x::Tuple; keywords)```
+
+Return the Cityblock distance between the given points both of which are given with vector-like structures.
+
+## Arguments
+- `u` : first point
+- `v` : second point
+- `x::Tuple` : tuple as follows: (u,v)
+- `Vinv::Matrix` : The inverse of the covariance matrix.
+
+"""
 function mahalanobis_distance(u,v, Vinv)
     _validate_distance_input(u,v,nothing)
     delta = u .- v
@@ -79,6 +193,21 @@ mahalanobis_distance(x::Tuple, Vinv) = mahalanobis_distance(x..., Vinv)
 
 ##
 
+"""
+```correlation(u,v; keywords)```
+```correlation(x::Tuple; keywords)```
+
+Return the Cityblock distance between the given points both of which are given with vector-like structures.
+
+## Arguments
+- `u` : first point
+- `v` : second point
+- `x::Tuple` : tuple as follows: (u,v)
+
+## Keywords
+- `w::Int` : weights that must be of the same length with u,v
+- `centered=true` : If true, u and v will be centered.
+"""
 function correlation(u,v; w = nothing, centered = true)
     _validate_distance_input(u,v,w)
     w = w != nothing ? w : ones(length(u))
